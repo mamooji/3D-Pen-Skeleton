@@ -9,7 +9,7 @@ if (-not (Test-Path "$root\backend\.venv")) {
     & "$root\backend\.venv\Scripts\python.exe" -m pip install -r "$root\backend\requirements.txt"
 }
 if (-not (Test-Path "$root\frontend\node_modules")) {
-    Push-Location "$root\frontend"; npm.cmd install; Pop-Location
+    Push-Location "$root\frontend"; npm.cmd ci; Pop-Location
 }
 Push-Location "$root\frontend"; npm.cmd run build; Pop-Location
 
