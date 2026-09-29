@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+python-multipart
+numpy
+scipy
+opencv-python-headless
+scikit-image
+shapely
+rembg[cpu]
+pillow
+reportlab
+
+# dev
+pytest
+httpx
