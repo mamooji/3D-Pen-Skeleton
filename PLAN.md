@@ -11,7 +11,7 @@ Live at **https://trace3dpen.com** (Cloudflare in front, Let's Encrypt certifica
 
 **In progress: §4 analytics.** The privacy policy (`/privacy/`) and terms (`/terms/`) are live, and Umami is running on the server. To finish:
 1. Open the dashboard through an SSH tunnel (it's only on the server's localhost): `ssh -L 3000:localhost:3000 skeleton`, then http://localhost:3000. Log in as `admin` / `umami` and **change the password right away**.
-2. Add a website in Umami (name it after the site; domain `trace3dpen.com`). Copy its website ID into `umamiWebsiteId` in `frontend/src/site.ts` and push. The tracker only loads once that's set.
+2. Done: the website is added in Umami and its ID is in `umamiWebsiteId` (`frontend/src/site.ts`).
 3. Check that visits show up. Events tracked: `upload`, `pdf-download`, `kofi`.
 
 **Domain `trace3dpen.com`** (bought at Squarespace, DNS on Cloudflare's free plan) is live. Caddy trusts Cloudflare's IP ranges and passes the real visitor IP to the app and Umami, `www` redirects to the bare domain, and the server's IP no longer serves the site. `SITE_ADDRESS=trace3dpen.com www.trace3dpen.com` is in the server's `.env`. Left to do:

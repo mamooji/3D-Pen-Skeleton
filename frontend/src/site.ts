@@ -14,7 +14,7 @@ export const SITE = {
   contactEmail: "mamoojim@hotmail.com",
   governingLaw: "Ontario, Canada",
   // Umami website ID (from the Umami dashboard). The tracker is added to production builds only while this is set.
-  umamiWebsiteId: "",
+  umamiWebsiteId: "5fc1c876-9cb8-409a-98d9-8b5c6e4b2fe8",
 };
 
 export const APP_PATH = "/app/";
