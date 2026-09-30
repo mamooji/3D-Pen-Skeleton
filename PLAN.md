@@ -47,8 +47,8 @@ Why Hetzner: the cheapest compute by far (DigitalOcean/Linode ~3–4×, Render/R
 
 ```
 push to main ─► GitHub Actions: tests + format check ─► build image ─► push to ghcr.io
-                                                   │
-                                                   ▼
+                                                                  │
+                                                                  ▼
                           SSH into VPS: docker compose pull && up -d
                                                    │
    Internet ─► Cloudflare ─► Caddy (HTTPS, :443) ─► app container (:8000)
