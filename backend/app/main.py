@@ -58,6 +58,11 @@ class TemplateRequest(BaseModel):
     params: Params = Params()
 
 
+@app.get("/api/health")
+def health():
+    return {"ok": True}
+
+
 @app.post("/api/segment")
 async def segment(file: UploadFile):
     data = await file.read()

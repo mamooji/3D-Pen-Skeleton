@@ -1,0 +1,11 @@
+# SITE_ADDRESS is ":80" (plain HTTP on the server's IP) until there's a domain.
+# Set it to the domain (e.g. "example.com") and Caddy gets an HTTPS certificate automatically.
+{$SITE_ADDRESS}
+
+encode zstd gzip
+
+request_body {
+	max_size 30MB
+}
+
+reverse_proxy app:8000

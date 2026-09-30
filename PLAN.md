@@ -45,7 +45,7 @@ push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr
 
 - [ ] Buy a domain
 - [ ] Pick the product name and branding ("3D Pen Skeleton" is fine as a repo name; a catchier name helps the landing page and social posts)
-- [ ] Create the Hetzner account and a 4 vCPU / 8 GB server
+- [x] Create the Hetzner account and a server (went with 3 vCPU / 4 GB; see Hosting)
 - [ ] Create a Cloudflare account and move the domain's DNS there
 
 ## Phase 1: Launch (~1–2 weeks)
@@ -55,7 +55,7 @@ push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr
 - [ ] **Limit concurrent background removals** (~2 at a time, with a queue). rembg already uses every core, so running more at once only slows everyone down and uses more RAM. Show a "Processing…" state in the UI.
 - [ ] **Downscale photos in the browser** before upload (e.g. 1600 px max side).
 - [ ] **Rate-limit uploads per IP** (Caddy or app).
-- [ ] Add a `/api/health` endpoint.
+- [x] Add a `/api/health` endpoint.
 - [ ] Split dev dependencies (`pytest`, `httpx`) out of `backend/requirements.txt`.
 - [ ] Friendly error states in the UI.
 
@@ -80,12 +80,12 @@ push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr
 - [ ] Privacy-friendly analytics without cookies (Plausible, or self-hosted Umami), so no cookie banner is needed
 
 ### 5. Infrastructure
-- [ ] VPS setup: non-root `deploy` user, SSH keys only, `ufw` (22/80/443), Docker + compose plugin, swap file, `unattended-upgrades`
-- [ ] `Dockerfile` + `docker-compose.yml` + `Caddyfile`
+- [x] VPS setup: non-root `deploy` user, SSH keys only, `ufw` (22/80/443), Docker + compose plugin, swap file, `unattended-upgrades`
+- [x] `Dockerfile` + `docker-compose.yml` + `Caddyfile`
 - [ ] GitHub Actions workflow: test → build → push to GHCR → deploy over SSH
 - [ ] DNS A record → VPS, proxied through Cloudflare
-- [ ] Docker log rotation
-- [ ] Docker healthcheck using `/api/health`
+- [x] Docker log rotation
+- [x] Docker healthcheck using `/api/health`
 - [ ] Uptime monitor (UptimeRobot / BetterStack)
 
 ### Launch
