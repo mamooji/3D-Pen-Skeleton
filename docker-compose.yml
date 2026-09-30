@@ -40,6 +40,8 @@ services:
       APP_SECRET: ${UMAMI_APP_SECRET:?set UMAMI_APP_SECRET in .env}
       # Visitor IDs can't be linked across days (the privacy policy says so).
       SALT_ROTATION: day
+      # Caddy puts the visitor's real IP here (Cloudflare's CF-Connecting-IP, only when it comes from Cloudflare).
+      CLIENT_IP_HEADER: x-real-ip
       DISABLE_TELEMETRY: 1
     ports:
       - "127.0.0.1:3000:3000"

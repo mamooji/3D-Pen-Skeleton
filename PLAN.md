@@ -4,7 +4,7 @@ Goal: launch the app publicly as fast as possible, cheaply, and able to handle m
 
 ## Where we left off (2026-09-30)
 
-Live on the server's IP (plain HTTP): landing page at `/`, tool at `/app/`, Ko-fi tips. Every push to `main` deploys automatically. Phase 1 §1–3 and most of §5 are done.
+Live on the server's IP (plain HTTP), moving to `trace3dpen.com`: landing page at `/`, tool at `/app/`, Ko-fi tips. Every push to `main` deploys automatically. Phase 1 §1–3 and most of §5 are done.
 
 **Waiting on:**
 - **Stripe review of the Ko-fi account.** Stripe flagged the new, empty Ko-fi page. We added content and "tip" wording and submitted their form. Until it's approved, card payments may be paused; PayPal still works. Never say "donate" or "donations" in public copy: Stripe only allows that for registered charities.
@@ -17,13 +17,13 @@ Live on the server's IP (plain HTTP): landing page at `/`, tool at `/app/`, Ko-f
 4. Add a website in Umami (name it after the site; the domain can be the IP for now and changed later). Copy its website ID into `umamiWebsiteId` in `frontend/src/site.ts` and push. The tracker only loads once that's set.
 5. Check that visits show up. Events tracked: `upload`, `pdf-download`, `kofi`.
 
-**Next up after that: Phase 0 domain + Cloudflare.** When the domain exists:
-  - Add `SITE_ADDRESS=<domain>` to `/opt/skeleton3d/.env` on the server, so Caddy gets an HTTPS certificate.
-  - Pass `SITE_URL=https://<domain>` to the Docker build as a build arg. The workflow doesn't pass it yet, and link previews need it for absolute image URLs.
-  - Tell Caddy to trust Cloudflare's IP ranges (`trusted_proxies`). Otherwise every visitor shares one IP and one upload rate limit.
-  - Point the Ko-fi page's website link at the domain.
-  - Add Cloudflare to the privacy policy (`frontend/src/landing/Legal.tsx`, "Where your data is processed"): it sees every visitor's IP address. Bump `UPDATED`.
-  - Change the website's domain in Umami.
+**In progress: domain `trace3dpen.com`** (bought at Squarespace, DNS on Cloudflare, free plan). Done in code: Caddy trusts Cloudflare's IP ranges and passes the real visitor IP to the app and Umami, `www` redirects to the bare domain, the build gets `SITE_URL`, deploys reload Caddy, and the privacy policy mentions Cloudflare. To finish:
+1. Cloudflare DNS: `A @ -> server IP` and `CNAME www -> trace3dpen.com`, both **Proxied** (orange cloud).
+2. Add `SITE_ADDRESS=trace3dpen.com, www.trace3dpen.com` to the server's `.env` and recreate Caddy (`docker compose up -d caddy`). Caddy gets Let's Encrypt certificates through Cloudflare.
+3. Cloudflare SSL/TLS mode: **Full (strict)**. Then turn on "Always Use HTTPS".
+4. Keep Cloudflare from breaking the privacy promises and the pre-rendered pages: turn off Scrape Shield's **Email Address Obfuscation** (it rewrites the contact email and breaks React hydration), and don't turn on Web Analytics' automatic setup, Rocket Loader, or Bot Fight Mode.
+5. Point the Ko-fi page's website link at https://trace3dpen.com.
+6. Later: restrict the Hetzner firewall's ports 80/443 to Cloudflare's IP ranges, so the server can't be reached around Cloudflare.
 
 **Other loose ends:** the gallery needs photos of real builds.
 
@@ -71,10 +71,10 @@ push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr
 
 ## Phase 0: Decisions (now)
 
-- [ ] Buy a domain
+- [x] Buy a domain: `trace3dpen.com` (Squarespace)
 - [ ] Pick the product name and branding ("3D Pen Skeleton" is fine as a repo name; a catchier name helps the landing page and social posts)
 - [x] Create the Hetzner account and a server (went with 3 vCPU / 4 GB; see Hosting)
-- [ ] Create a Cloudflare account and move the domain's DNS there
+- [x] Create a Cloudflare account and move the domain's DNS there
 
 ## Phase 1: Launch (~1–2 weeks)
 
@@ -111,7 +111,7 @@ push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr
 - [x] VPS setup: non-root `deploy` user, SSH keys only, `ufw` (22/80/443), Docker + compose plugin, swap file, `unattended-upgrades`
 - [x] `Dockerfile` + `docker-compose.yml` + `Caddyfile`
 - [x] GitHub Actions workflow: test → build → push to GHCR → deploy over SSH (`.github/workflows/deploy.yml`)
-- [ ] DNS A record → VPS, proxied through Cloudflare
+- [ ] DNS A record → VPS, proxied through Cloudflare (see "Where we left off")
 - [x] Docker log rotation
 - [x] Docker healthcheck using `/api/health`
 - [ ] Uptime monitor (UptimeRobot / BetterStack)

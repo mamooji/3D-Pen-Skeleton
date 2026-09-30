@@ -32,7 +32,7 @@ export function Privacy() {
     <LegalPage title="Privacy policy">
       <p>
         <strong>The short version:</strong> your photo is used only to make your template, and it's deleted
-        automatically 6 hours after you last use it. There are no accounts, no cookies, and no ads. Visits are counted
+        automatically 6 hours after you last use it. There are no accounts, no ads, and we don't set any cookies. Visits are counted
         with privacy-friendly analytics that run on our own server and don't identify you.
       </p>
 
@@ -97,6 +97,12 @@ export function Privacy() {
       <p>
         Our server is hosted by Hetzner in Ashburn, Virginia, USA. If you live elsewhere, your photo and visit data are
         processed there. Hetzner provides the server only and processes data on our behalf.
+      </p>
+      <p>
+        Every visit passes through <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">Cloudflare</a>,
+        which protects the server from attacks and speeds up the site. Cloudflare sees your IP address and the pages you
+        request, as the server does, and processes them on our behalf. If it needs to check that you're not a bot, it
+        may set a short-lived security cookie.
       </p>
       <p>
         We don't use any other services on this site: no ads, no social media widgets, and no third-party fonts or
