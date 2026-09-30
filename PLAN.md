@@ -4,9 +4,11 @@ Goal: launch the app publicly as fast as possible, cheaply, and able to handle m
 
 ## Where we left off (2026-09-30)
 
-Live at **https://trace3dpen.com** (Cloudflare in front, Let's Encrypt certificates from Caddy): landing page at `/`, tool at `/app/`, Ko-fi tips. Every push to `main` deploys automatically. The product is named **Trace 3D Pen** to match the domain. Phase 1 §1–5 are done; next up is launch posts.
+Live at **https://trace3dpen.com** (Cloudflare in front, Let's Encrypt certificates from Caddy): landing page at `/`, tool at `/app/`, Ko-fi tips. Every push to `main` deploys automatically. The product is named **Trace 3D Pen** to match the domain. Phase 1 §1–5 are done; next up is building a few models to photograph, then launch posts.
 
 **Uptime monitor:** UptimeRobot (free plan) runs a keyword check on `https://trace3dpen.com/api/health` for `"ok":true` every 5 minutes and emails on failure.
+
+**Frontend formatting:** Prettier (defaults plus Tailwind class sorting) in `frontend/`. CI fails on unformatted code, so run `npm run format` before pushing, and after `shadcn add` (the CLI writes files without semicolons).
 
 **Ko-fi:** Stripe approved the account, so card tips work. The page's website link points to https://trace3dpen.com. Never say "donate" or "donations" in public copy: Stripe only allows that for registered charities.
 
@@ -15,10 +17,9 @@ Live at **https://trace3dpen.com** (Cloudflare in front, Let's Encrypt certifica
 **Domain `trace3dpen.com`** (bought at Squarespace, DNS on Cloudflare's free plan) is live, with Cloudflare SSL/TLS on **Full (strict)**. Caddy trusts Cloudflare's IP ranges and passes the real visitor IP to the app and Umami, `www` redirects to the bare domain, and the server's IP no longer serves the site. `SITE_ADDRESS=trace3dpen.com www.trace3dpen.com` is in the server's `.env`. Keep in Cloudflare: Scrape Shield's **Email Address Obfuscation** off (it rewrites the contact email and breaks React hydration), and Web Analytics' automatic setup, Rocket Loader, and Bot Fight Mode off (they'd add scripts or cookies the privacy policy doesn't mention).
 
 **Next up:**
-1. **Launch posts:** r/3Dpen, 3D-pen Facebook groups, and short TikToks/Shorts showing photo → template → build.
-2. Later: restrict the Hetzner firewall's ports 80/443 to Cloudflare's IP ranges, so the server can't be reached around Cloudflare.
-
-**Other loose ends:** the gallery needs photos of real builds.
+1. **Build a few models** (in progress) and photograph them: these feed both the launch posts and the landing page gallery (add them to `GALLERY` in `frontend/src/landing/Landing.tsx`; photos go in `frontend/public/landing/gallery/`).
+2. **Launch posts:** r/3Dpen, 3D-pen Facebook groups, and short TikToks/Shorts showing photo → template → build. Claude can draft the Reddit post and a video script.
+3. Later: restrict the Hetzner firewall's ports 80/443 to Cloudflare's IP ranges, so the server can't be reached around Cloudflare.
 
 ## Key numbers (measured on an M1 Pro, 1600×1200 photo)
 
@@ -45,7 +46,7 @@ Why Hetzner: the cheapest compute by far (DigitalOcean/Linode ~3–4×, Render/R
 ## Deploy architecture
 
 ```
-push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr.io
+push to main ─► GitHub Actions: tests + format check ─► build image ─► push to ghcr.io
                                                    │
                                                    ▼
                           SSH into VPS: docker compose pull && up -d
