@@ -109,7 +109,7 @@ push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr
 
 ### 5. Infrastructure
 - [x] VPS setup: non-root `deploy` user, SSH keys only, `ufw` (22/80/443), Docker + compose plugin, swap file, `unattended-upgrades`
-- [x] `Dockerfile` + `docker-compose.yml` + `Caddyfile`
+- [x] `Dockerfile` + `docker-compose.yml` + `caddy/Caddyfile`
 - [x] GitHub Actions workflow: test → build → push to GHCR → deploy over SSH (`.github/workflows/deploy.yml`)
 - [ ] DNS A record → VPS, proxied through Cloudflare (see "Where we left off")
 - [x] Docker log rotation

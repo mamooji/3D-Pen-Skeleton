@@ -71,7 +71,10 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
       - name: Copy compose files
-        run: scp docker-compose.yml Caddyfile "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/skeleton3d/"
+        run: |
+          ssh "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" 'mkdir -p /opt/skeleton3d/caddy'
+          scp docker-compose.yml "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/skeleton3d/"
+          scp caddy/Caddyfile "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/skeleton3d/caddy/"
       - name: Pull and restart
         # The registry token goes over stdin so it never appears in a command line on the server.
         # APP_IMAGE is pinned in .env (next to settings like SITE_ADDRESS), so a manual `docker compose up`
@@ -87,6 +90,7 @@ jobs:
             docker compose pull app
             docker compose up -d --no-build --wait --wait-timeout 120
             # A changed Caddyfile alone doesn't recreate the container, so reload it.
+            rm -f Caddyfile  # from before the config moved to caddy/
             docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
             docker logout ghcr.io
             docker image prune -f
