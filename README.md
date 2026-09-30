@@ -13,7 +13,7 @@ Trace every piece on paper with the 3D pen, peel them off, and stand the ribs up
 ## Run
 
 ```powershell
-.\start.cmd          # builds the frontend, serves everything at http://127.0.0.1:8000
+.\start.cmd          # builds the frontend, serves everything at http://127.0.0.1:8000 (the tool is at /app/)
 ```
 
 `start.cmd` runs `start.ps1` with a one-off execution-policy bypass. Windows blocks `.ps1` scripts by default, so `.\start.ps1` on its own fails.
@@ -24,7 +24,7 @@ Development (hot reload):
 
 ```powershell
 cd backend;  .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
-cd frontend; npm run dev        # http://localhost:5173, proxies /api to :8000
+cd frontend; npm run dev        # http://localhost:5173 (landing) and /app/ (tool), proxies /api to :8000
 ```
 
 Command line:

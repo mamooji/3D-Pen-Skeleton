@@ -2,6 +2,9 @@
 
 FROM node:24-slim AS frontend
 WORKDIR /src/frontend
+# The site's public URL (e.g. https://example.com), for absolute link-preview URLs. Optional.
+ARG SITE_URL=""
+ENV SITE_URL=$SITE_URL
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./

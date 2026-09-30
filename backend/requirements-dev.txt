@@ -1,3 +1,6 @@
 -r requirements.txt
 pytest
 httpx2
+# scripts/landing_assets.py (reads the web font)
+fonttools
+brotli

@@ -26,7 +26,8 @@ function readStored(): Theme {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(readStored);
-  const [systemDark, setSystemDark] = useState(() => window.matchMedia(DARK_QUERY).matches);
+  // No window when the landing page is pre-rendered at build time.
+  const [systemDark, setSystemDark] = useState(() => typeof window !== "undefined" && window.matchMedia(DARK_QUERY).matches);
 
   useEffect(() => {
     const mq = window.matchMedia(DARK_QUERY);

@@ -60,14 +60,14 @@ push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr
 - [x] Friendly error states in the UI.
 
 ### 2. Landing page
-- [ ] Routing: `/` = landing, `/app` = tool
-- [ ] Hero with a before-and-after: photo → template → finished 3D-pen build
-- [ ] "How it works" in 3 steps
-- [ ] Gallery of real examples
-- [ ] FAQ
-- [ ] "Try it free" button
-- [ ] Pre-render the landing page to static HTML at build time (SEO + link previews)
-- [ ] Open Graph image, favicon, meta tags
+- [x] Routing: `/` = landing, `/app` = tool
+- [x] Hero with a before-and-after: photo → template → finished 3D-pen build (a generated duck for now; swap in a real build photo when there is one)
+- [x] "How it works" in 3 steps
+- [ ] Gallery of real examples (section is built and hidden until `GALLERY` in `frontend/src/landing/Landing.tsx` has photos)
+- [x] FAQ
+- [x] "Try it free" button
+- [x] Pre-render the landing page to static HTML at build time (SEO + link previews)
+- [x] Open Graph image, favicon, meta tags (set `SITE_URL` once there is a domain, for absolute preview URLs)
 
 ### 3. Donations (no backend code)
 - [ ] Stripe Payment Link (or Ko-fi / Buy Me a Coffee)

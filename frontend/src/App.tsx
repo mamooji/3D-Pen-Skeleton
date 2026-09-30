@@ -6,6 +6,7 @@ import Uploader from "./components/Uploader";
 import Controls from "./components/Controls";
 import TemplatePreview from "./components/TemplatePreview";
 import { ModeToggle } from "@/components/mode-toggle";
+import { SITE } from "@/site";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -103,11 +104,11 @@ export default function App() {
     <div className="min-h-svh bg-muted/40">
       <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <a href="/" aria-label="Home" className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <PenTool className="size-5" />
-          </div>
+          </a>
           <div className="min-w-0 flex-1">
-            <h1 className="font-heading text-base leading-tight font-semibold">3D Pen Skeleton</h1>
+            <h1 className="font-heading text-base leading-tight font-semibold">{SITE.name}</h1>
             <p className="truncate text-sm text-muted-foreground">
               Turn a photo into traceable pieces for a 3D-pen frame.
             </p>
