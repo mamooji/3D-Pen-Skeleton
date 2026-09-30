@@ -4,15 +4,12 @@ Goal: launch the app publicly as fast as possible, cheaply, and able to handle m
 
 ## Where we left off (2026-09-30)
 
-Live at **https://trace3dpen.com** (Cloudflare in front, Let's Encrypt certificates from Caddy): landing page at `/`, tool at `/app/`, Ko-fi tips. Every push to `main` deploys automatically. Phase 1 §1–3 and most of §5 are done.
+Live at **https://trace3dpen.com** (Cloudflare in front, Let's Encrypt certificates from Caddy): landing page at `/`, tool at `/app/`, Ko-fi tips. Every push to `main` deploys automatically. Phase 1 §1–4 and most of §5 are done; next up is the uptime monitor, then launch posts.
 
 **Waiting on:**
 - **Stripe review of the Ko-fi account.** Stripe flagged the new, empty Ko-fi page. We added content and "tip" wording and submitted their form. Until it's approved, card payments may be paused; PayPal still works. Never say "donate" or "donations" in public copy: Stripe only allows that for registered charities.
 
-**In progress: §4 analytics.** The privacy policy (`/privacy/`) and terms (`/terms/`) are live, and Umami is running on the server. To finish:
-1. Open the dashboard through an SSH tunnel (it's only on the server's localhost): `ssh -L 3000:localhost:3000 skeleton`, then http://localhost:3000. Log in as `admin` / `umami` and **change the password right away**.
-2. Done: the website is added in Umami and its ID is in `umamiWebsiteId` (`frontend/src/site.ts`).
-3. Check that visits show up. Events tracked: `upload`, `pdf-download`, `kofi`.
+**§4 legal and analytics: done.** Privacy policy at `/privacy/`, terms at `/terms/`, Umami counting visits and the `upload`, `pdf-download`, and `kofi` events. Dashboard: `ssh -L 3000:localhost:3000 skeleton`, then http://localhost:3000. Keep the privacy policy in sync with what the code and Cloudflare actually do.
 
 **Domain `trace3dpen.com`** (bought at Squarespace, DNS on Cloudflare's free plan) is live. Caddy trusts Cloudflare's IP ranges and passes the real visitor IP to the app and Umami, `www` redirects to the bare domain, and the server's IP no longer serves the site. `SITE_ADDRESS=trace3dpen.com www.trace3dpen.com` is in the server's `.env`. Left to do:
 - Cloudflare SSL/TLS mode: **Full (strict)**.
@@ -100,7 +97,7 @@ push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr
 ### 4. Legal and analytics
 - [x] Privacy policy at `/privacy/` (server in Ashburn, US; covers GDPR basics). The app no longer writes access logs, so the policy can say IP addresses aren't logged. Keep the policy in sync with what the code actually stores.
 - [x] Terms of use at `/terms/`
-- [ ] Self-hosted Umami, no cookies, so no cookie banner is needed (running; dashboard setup steps are under "Where we left off")
+- [x] Self-hosted Umami, no cookies, so no cookie banner is needed (dashboard via SSH tunnel, see "Where we left off")
 
 ### 5. Infrastructure
 - [x] VPS setup: non-root `deploy` user, SSH keys only, `ufw` (22/80/443), Docker + compose plugin, swap file, `unattended-upgrades`
