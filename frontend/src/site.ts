@@ -11,7 +11,7 @@ export const SITE = {
   // Who runs the site, how to reach them, and whose laws apply, for the privacy policy and terms.
   // The build fails while any of these is empty (scripts/prerender.mjs).
   operator: "Muhammad Mamooji",
-  contactEmail: "",
+  contactEmail: "mamoojim@hotmail.com",
   governingLaw: "Ontario, Canada",
   // Umami website ID (from the Umami dashboard). The tracker is added to production builds only while this is set.
   umamiWebsiteId: "",

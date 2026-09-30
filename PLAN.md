@@ -10,13 +10,12 @@ Live on the server's IP (plain HTTP): landing page at `/`, tool at `/app/`, Ko-f
 - **Stripe review of the Ko-fi account.** Stripe flagged the new, empty Ko-fi page. We added content and "tip" wording and submitted their form. Until it's approved, card payments may be paused; PayPal still works. Never say "donate" or "donations" in public copy: Stripe only allows that for registered charities.
 
 **In progress: §4 legal and analytics** (code is written; the pages are at `/privacy/` and `/terms/`, and Umami is in `docker-compose.yml`). To finish:
-1. Fill in `contactEmail` in `frontend/src/site.ts` (a new address just for this site). The build fails while it's empty.
-2. **Before pushing**, add Umami's secrets to the server's `.env`. Compose refuses to start without them, so the deploy would fail:
+1. **Before pushing**, add Umami's secrets to the server's `.env`. Compose refuses to start without them, so the deploy would fail:
    `ssh skeleton 'cd /opt/skeleton3d && printf "UMAMI_DB_PASSWORD=%s\nUMAMI_APP_SECRET=%s\n" "$(openssl rand -hex 24)" "$(openssl rand -hex 32)" >> .env'`
-3. Push. The deploy starts Umami and its Postgres.
-4. Open the dashboard through an SSH tunnel (it's only on the server's localhost): `ssh -L 3000:localhost:3000 skeleton`, then http://localhost:3000. Log in as `admin` / `umami` and **change the password right away**.
-5. Add a website in Umami (name it after the site; the domain can be the IP for now and changed later). Copy its website ID into `umamiWebsiteId` in `frontend/src/site.ts` and push. The tracker only loads once that's set.
-6. Check that visits show up. Events tracked: `upload`, `pdf-download`, `kofi`.
+2. Push. The deploy starts Umami and its Postgres.
+3. Open the dashboard through an SSH tunnel (it's only on the server's localhost): `ssh -L 3000:localhost:3000 skeleton`, then http://localhost:3000. Log in as `admin` / `umami` and **change the password right away**.
+4. Add a website in Umami (name it after the site; the domain can be the IP for now and changed later). Copy its website ID into `umamiWebsiteId` in `frontend/src/site.ts` and push. The tracker only loads once that's set.
+5. Check that visits show up. Events tracked: `upload`, `pdf-download`, `kofi`.
 
 **Next up after that: Phase 0 domain + Cloudflare.** When the domain exists:
   - Add `SITE_ADDRESS=<domain>` to `/opt/skeleton3d/.env` on the server, so Caddy gets an HTTPS certificate.
