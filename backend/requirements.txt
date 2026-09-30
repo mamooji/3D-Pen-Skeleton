@@ -9,7 +9,3 @@ shapely
 rembg[cpu]
 pillow
 reportlab
-
-# dev
-pytest
-httpx

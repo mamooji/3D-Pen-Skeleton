@@ -40,27 +40,54 @@ export interface TemplateResult {
   model: Polyline3D[];
 }
 
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+  }
+}
+
+// Used when the response has no message of its own (e.g. it came from Caddy, not the app).
+const FALLBACK: Record<number, string> = {
+  413: "That photo is too large. Try one under 25 MB.",
+  429: "Too many requests. Please wait a minute and try again.",
+  502: "The app is restarting. Please try again in a few seconds.",
+  503: "The app is busy or restarting. Please try again in a few seconds.",
+  504: "The app is busy or restarting. Please try again in a few seconds.",
+};
+
 async function check(res: Response): Promise<Response> {
   if (res.ok) return res;
-  let msg = `Request failed (${res.status})`;
+  let msg = FALLBACK[res.status] ?? "Something went wrong on our side. Please try again.";
   try {
     const body = await res.json();
     if (typeof body.detail === "string") msg = body.detail;
   } catch {
     /* not JSON */
   }
-  throw new Error(msg);
+  throw new ApiError(msg, res.status);
 }
 
-export async function segment(file: File): Promise<{ image_id: string; preview: string }> {
+async function request(input: string, init: RequestInit): Promise<Response> {
+  try {
+    return await check(await fetch(input, init));
+  } catch (e) {
+    // fetch only throws TypeError when the request never got a response.
+    if (e instanceof TypeError) throw new ApiError("Can't reach the server. Check your connection and try again.", 0);
+    throw e;
+  }
+}
+
+export async function segment(photo: Blob): Promise<{ image_id: string; preview: string }> {
   const form = new FormData();
-  form.append("file", file);
-  const res = await check(await fetch("/api/segment", { method: "POST", body: form }));
-  return res.json();
+  form.append("file", photo, "photo");
+  return (await request("/api/segment", { method: "POST", body: form })).json();
 }
 
 function post(path: string, imageId: string, params: Params, signal?: AbortSignal) {
-  return fetch(path, {
+  return request(path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ image_id: imageId, params }),
@@ -69,9 +96,9 @@ function post(path: string, imageId: string, params: Params, signal?: AbortSigna
 }
 
 export async function template(imageId: string, params: Params, signal?: AbortSignal): Promise<TemplateResult> {
-  return (await check(await post("/api/template", imageId, params, signal))).json();
+  return (await post("/api/template", imageId, params, signal)).json();
 }
 
 export async function exportPdf(imageId: string, params: Params): Promise<Blob> {
-  return (await check(await post("/api/export", imageId, params))).blob();
+  return (await post("/api/export", imageId, params)).blob();
 }

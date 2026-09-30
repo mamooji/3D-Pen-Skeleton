@@ -14,7 +14,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     U2NET_HOME=/opt/models \
     NUMBA_CACHE_DIR=/opt/numba-cache \
-    NUMBA_CPU_NAME=generic
+    NUMBA_CPU_NAME=generic \
+    CACHE_DIR=/data/cache
 WORKDIR /srv/backend
 
 COPY backend/requirements.txt ./
@@ -30,8 +31,8 @@ RUN python -c "from rembg import new_session; new_session('isnet-general-use')"
 
 # numba needs to write to its cache dir, even when it only reads the compiled functions.
 # The downloaded model is root-only (0600).
-RUN useradd --system --no-create-home app && mkdir -p /opt/numba-cache && chown -R app /opt/numba-cache \
-    && chmod -R a+rX /opt/models
+RUN useradd --system --no-create-home app && mkdir -p /opt/numba-cache /data/cache \
+    && chown -R app /opt/numba-cache /data/cache && chmod -R a+rX /opt/models
 USER app
 # Fail the build, not the first upload, if the app user can't load the model.
 RUN python -c "from rembg import new_session; new_session('isnet-general-use')"

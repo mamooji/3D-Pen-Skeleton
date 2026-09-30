@@ -16,7 +16,7 @@ export default function Uploader({ onFile, busy, cutout }: Props) {
 
   function pick(files: FileList | null) {
     const f = files?.[0];
-    if (f && f.type.startsWith("image/")) onFile(f);
+    if (f) onFile(f);
   }
 
   const browse = () => !busy && input.current?.click();

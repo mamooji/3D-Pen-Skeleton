@@ -6,6 +6,9 @@ services:
     # Not published: only Caddy can reach it.
     expose:
       - "8000"
+    volumes:
+      # Processed uploads (deleted 6 h after last use), kept across restarts and deploys.
+      - uploads:/data/cache
 
   caddy:
     image: caddy:2
@@ -24,5 +27,6 @@ services:
       - caddy_config:/config
 
 volumes:
+  uploads:
   caddy_data:
   caddy_config:

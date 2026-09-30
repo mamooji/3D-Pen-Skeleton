@@ -51,13 +51,13 @@ push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr
 ## Phase 1: Launch (~1–2 weeks)
 
 ### 1. Production-proof the tool (do first: this is what would break on launch day)
-- [ ] **Fix cache eviction.** Only 20 uploads are kept in memory (`backend/app/main.py:22`). With more than 20 concurrent users, people get "Image not found or expired" mid-session. Save prepared masks to disk (or Redis) keyed by hash.
-- [ ] **Limit concurrent background removals** (~2 at a time, with a queue). rembg already uses every core, so running more at once only slows everyone down and uses more RAM. Show a "Processing…" state in the UI.
-- [ ] **Downscale photos in the browser** before upload (e.g. 1600 px max side).
-- [ ] **Rate-limit uploads per IP** (Caddy or app).
+- [x] **Fix cache eviction.** Only 20 uploads are kept in memory (`backend/app/main.py:22`). With more than 20 concurrent users, people get "Image not found or expired" mid-session. Save prepared masks to disk (or Redis) keyed by hash.
+- [x] **Limit concurrent background removals** (~2 at a time, with a queue). rembg already uses every core, so running more at once only slows everyone down and uses more RAM. Show a "Processing…" state in the UI.
+- [x] **Downscale photos in the browser** before upload (e.g. 1600 px max side).
+- [x] **Rate-limit uploads per IP** (Caddy or app).
 - [x] Add a `/api/health` endpoint.
-- [ ] Split dev dependencies (`pytest`, `httpx`) out of `backend/requirements.txt`.
-- [ ] Friendly error states in the UI.
+- [x] Split dev dependencies (`pytest`, `httpx`) out of `backend/requirements.txt`.
+- [x] Friendly error states in the UI.
 
 ### 2. Landing page
 - [ ] Routing: `/` = landing, `/app` = tool

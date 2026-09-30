@@ -1,6 +1,7 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { AlertCircle, Box, Download, FileText, Loader2, PenTool, TriangleAlert } from "lucide-react";
-import { DEFAULT_PARAMS, exportPdf, segment, template, type Params, type TemplateResult } from "./api";
+import { ApiError, DEFAULT_PARAMS, exportPdf, segment, template, type Params, type TemplateResult } from "./api";
+import { shrinkPhoto } from "./lib/image";
 import Uploader from "./components/Uploader";
 import Controls from "./components/Controls";
 import TemplatePreview from "./components/TemplatePreview";
@@ -24,18 +25,38 @@ export default function App() {
   const [building, setBuilding] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The uploaded photo, so it can be sent again if the server has forgotten it.
+  const photo = useRef<Blob | null>(null);
 
   async function onFile(file: File) {
+    // Some systems give photos (e.g. HEIC) no type at all; let the server decide those.
+    if (file.type && !file.type.startsWith("image/")) {
+      setError("That file isn't an image. Try a JPG or PNG photo.");
+      return;
+    }
     setError(null);
     setSegmenting(true);
     try {
-      const r = await segment(file);
+      const shrunk = await shrinkPhoto(file);
+      const r = await segment(shrunk);
+      photo.current = shrunk;
       setImageId(r.image_id);
       setCutout(r.preview);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setSegmenting(false);
+    }
+  }
+
+  /** Run `fn` with the current image, re-uploading the photo once if the server says it has expired. */
+  async function withImage<T>(id: string, fn: (id: string) => Promise<T>): Promise<T> {
+    try {
+      return await fn(id);
+    } catch (e) {
+      if (!(e instanceof ApiError && e.status === 404 && photo.current)) throw e;
+      const r = await segment(photo.current);
+      return fn(r.image_id);
     }
   }
 
@@ -46,7 +67,7 @@ export default function App() {
     const timer = setTimeout(async () => {
       setBuilding(true);
       try {
-        setResult(await template(imageId, params, ctrl.signal));
+        setResult(await withImage(imageId, (id) => template(id, params, ctrl.signal)));
         setError(null);
       } catch (e) {
         if ((e as Error).name !== "AbortError") setError((e as Error).message);
@@ -64,7 +85,7 @@ export default function App() {
     if (!imageId) return;
     setDownloading(true);
     try {
-      const blob = await exportPdf(imageId, params);
+      const blob = await withImage(imageId, (id) => exportPdf(id, params));
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -204,11 +225,20 @@ function HowItWorks() {
 }
 
 function Processing() {
+  // A normal upload takes a few seconds; longer than that means it's waiting behind other people's.
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setSlow(true), 6000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="flex flex-col gap-4">
       <p className="flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="size-4 animate-spin" />
-        Finding the object… (the first upload also downloads the cut-out model)
+        {slow
+          ? "Lots of people are using this right now. You're in line, and it'll start in a moment…"
+          : "Finding the object… this usually takes a few seconds."}
       </p>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5">
         {[0, 1, 2].map((i) => (

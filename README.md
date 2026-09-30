@@ -34,7 +34,7 @@ cd backend
 .\.venv\Scripts\python.exe -m app.cli photo.jpg -o template.pdf --detail 3 --size 15
 ```
 
-Tests: `cd backend; .\.venv\Scripts\python.exe -m pytest`
+Tests (first time: `.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt`): `cd backend; .\.venv\Scripts\python.exe -m pytest`
 
 ## How it works
 
