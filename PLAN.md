@@ -4,26 +4,21 @@ Goal: launch the app publicly as fast as possible, cheaply, and able to handle m
 
 ## Where we left off (2026-09-30)
 
-Live on the server's IP (plain HTTP), moving to `trace3dpen.com`: landing page at `/`, tool at `/app/`, Ko-fi tips. Every push to `main` deploys automatically. Phase 1 §1–3 and most of §5 are done.
+Live at **https://trace3dpen.com** (Cloudflare in front, Let's Encrypt certificates from Caddy): landing page at `/`, tool at `/app/`, Ko-fi tips. Every push to `main` deploys automatically. Phase 1 §1–3 and most of §5 are done.
 
 **Waiting on:**
 - **Stripe review of the Ko-fi account.** Stripe flagged the new, empty Ko-fi page. We added content and "tip" wording and submitted their form. Until it's approved, card payments may be paused; PayPal still works. Never say "donate" or "donations" in public copy: Stripe only allows that for registered charities.
 
-**In progress: §4 legal and analytics** (code is written; the pages are at `/privacy/` and `/terms/`, and Umami is in `docker-compose.yml`). To finish:
-1. **Before pushing**, add Umami's secrets to the server's `.env`. Compose refuses to start without them, so the deploy would fail:
-   `ssh skeleton 'cd /opt/skeleton3d && printf "UMAMI_DB_PASSWORD=%s\nUMAMI_APP_SECRET=%s\n" "$(openssl rand -hex 24)" "$(openssl rand -hex 32)" >> .env'`
-2. Push. The deploy starts Umami and its Postgres.
-3. Open the dashboard through an SSH tunnel (it's only on the server's localhost): `ssh -L 3000:localhost:3000 skeleton`, then http://localhost:3000. Log in as `admin` / `umami` and **change the password right away**.
-4. Add a website in Umami (name it after the site; the domain can be the IP for now and changed later). Copy its website ID into `umamiWebsiteId` in `frontend/src/site.ts` and push. The tracker only loads once that's set.
-5. Check that visits show up. Events tracked: `upload`, `pdf-download`, `kofi`.
+**In progress: §4 analytics.** The privacy policy (`/privacy/`) and terms (`/terms/`) are live, and Umami is running on the server. To finish:
+1. Open the dashboard through an SSH tunnel (it's only on the server's localhost): `ssh -L 3000:localhost:3000 skeleton`, then http://localhost:3000. Log in as `admin` / `umami` and **change the password right away**.
+2. Add a website in Umami (name it after the site; domain `trace3dpen.com`). Copy its website ID into `umamiWebsiteId` in `frontend/src/site.ts` and push. The tracker only loads once that's set.
+3. Check that visits show up. Events tracked: `upload`, `pdf-download`, `kofi`.
 
-**In progress: domain `trace3dpen.com`** (bought at Squarespace, DNS on Cloudflare, free plan). Done in code: Caddy trusts Cloudflare's IP ranges and passes the real visitor IP to the app and Umami, `www` redirects to the bare domain, the build gets `SITE_URL`, deploys reload Caddy, and the privacy policy mentions Cloudflare. To finish:
-1. Cloudflare DNS: `A @ -> server IP` and `CNAME www -> trace3dpen.com`, both **Proxied** (orange cloud).
-2. Add `SITE_ADDRESS=trace3dpen.com, www.trace3dpen.com` to the server's `.env` and recreate Caddy (`docker compose up -d caddy`). Caddy gets Let's Encrypt certificates through Cloudflare.
-3. Cloudflare SSL/TLS mode: **Full (strict)**. Then turn on "Always Use HTTPS".
-4. Keep Cloudflare from breaking the privacy promises and the pre-rendered pages: turn off Scrape Shield's **Email Address Obfuscation** (it rewrites the contact email and breaks React hydration), and don't turn on Web Analytics' automatic setup, Rocket Loader, or Bot Fight Mode.
-5. Point the Ko-fi page's website link at https://trace3dpen.com.
-6. Later: restrict the Hetzner firewall's ports 80/443 to Cloudflare's IP ranges, so the server can't be reached around Cloudflare.
+**Domain `trace3dpen.com`** (bought at Squarespace, DNS on Cloudflare's free plan) is live. Caddy trusts Cloudflare's IP ranges and passes the real visitor IP to the app and Umami, `www` redirects to the bare domain, and the server's IP no longer serves the site. `SITE_ADDRESS=trace3dpen.com www.trace3dpen.com` is in the server's `.env`. Left to do:
+- Cloudflare SSL/TLS mode: **Full (strict)**.
+- Leave Scrape Shield's **Email Address Obfuscation** off (it rewrites the contact email and breaks React hydration), and don't turn on Web Analytics' automatic setup, Rocket Loader, or Bot Fight Mode (they'd add scripts or cookies the privacy policy doesn't mention).
+- Point the Ko-fi page's website link at https://trace3dpen.com.
+- Later: restrict the Hetzner firewall's ports 80/443 to Cloudflare's IP ranges, so the server can't be reached around Cloudflare.
 
 **Other loose ends:** the gallery needs photos of real builds.
 
@@ -105,13 +100,13 @@ push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr
 ### 4. Legal and analytics
 - [x] Privacy policy at `/privacy/` (server in Ashburn, US; covers GDPR basics). The app no longer writes access logs, so the policy can say IP addresses aren't logged. Keep the policy in sync with what the code actually stores.
 - [x] Terms of use at `/terms/`
-- [ ] Self-hosted Umami, no cookies, so no cookie banner is needed (code done; server setup steps are under "Where we left off")
+- [ ] Self-hosted Umami, no cookies, so no cookie banner is needed (running; dashboard setup steps are under "Where we left off")
 
 ### 5. Infrastructure
 - [x] VPS setup: non-root `deploy` user, SSH keys only, `ufw` (22/80/443), Docker + compose plugin, swap file, `unattended-upgrades`
 - [x] `Dockerfile` + `docker-compose.yml` + `caddy/Caddyfile`
 - [x] GitHub Actions workflow: test → build → push to GHCR → deploy over SSH (`.github/workflows/deploy.yml`)
-- [ ] DNS A record → VPS, proxied through Cloudflare (see "Where we left off")
+- [x] DNS A record → VPS, proxied through Cloudflare
 - [x] Docker log rotation
 - [x] Docker healthcheck using `/api/health`
 - [ ] Uptime monitor (UptimeRobot / BetterStack)
