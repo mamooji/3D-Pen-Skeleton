@@ -11,16 +11,39 @@ import {
   SlidersHorizontal,
   Sparkles,
 } from "lucide-react";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { APP_PATH, PRIVACY_PATH, SITE } from "@/site";
 import { Layout, TryButton } from "./Layout";
 
 const PIPELINE = [
-  { src: "/landing/duck-photo.svg", label: "Your photo", alt: "A side-view picture of a rubber duck" },
-  { src: "/landing/duck-template.svg", label: "Printable template", alt: "A printed page of numbered, colored rib and ring outlines" },
-  { src: "/landing/duck-frame.svg", label: "Your 3D frame", alt: "The ribs and rings assembled into a 3D duck frame" },
+  {
+    src: "/landing/duck-photo.svg",
+    label: "Your photo",
+    alt: "A side-view picture of a rubber duck",
+  },
+  {
+    src: "/landing/duck-template.svg",
+    label: "Printable template",
+    alt: "A printed page of numbered, colored rib and ring outlines",
+  },
+  {
+    src: "/landing/duck-frame.svg",
+    label: "Your 3D frame",
+    alt: "The ribs and rings assembled into a 3D duck frame",
+  },
 ];
 
 const STEPS = [
@@ -42,11 +65,31 @@ const STEPS = [
 ];
 
 const FEATURES = [
-  { icon: Sparkles, title: "Free, no sign-up", text: "Open the app and start. No account, no watermark." },
-  { icon: SlidersHorizontal, title: "Adjustable detail", text: "From a quick 3-rib sketch to a detailed 11-rib frame." },
-  { icon: ListOrdered, title: "Numbered and color-coded", text: "Every rib and ring is labeled, with ticks where pieces cross." },
-  { icon: Ruler, title: "Real-size printing", text: "Set the size in centimeters. A 50 mm scale bar confirms the print." },
-  { icon: ShieldCheck, title: "Your photos stay private", text: "Used only to make your template, then deleted automatically." },
+  {
+    icon: Sparkles,
+    title: "Free, no sign-up",
+    text: "Open the app and start. No account, no watermark.",
+  },
+  {
+    icon: SlidersHorizontal,
+    title: "Adjustable detail",
+    text: "From a quick 3-rib sketch to a detailed 11-rib frame.",
+  },
+  {
+    icon: ListOrdered,
+    title: "Numbered and color-coded",
+    text: "Every rib and ring is labeled, with ticks where pieces cross.",
+  },
+  {
+    icon: Ruler,
+    title: "Real-size printing",
+    text: "Set the size in centimeters. A 50 mm scale bar confirms the print.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Your photos stay private",
+    text: "Used only to make your template, then deleted automatically.",
+  },
 ];
 
 // Photos of finished builds, in public/landing/gallery/. The section stays hidden until there's at least one.
@@ -81,9 +124,13 @@ const FAQ: { q: string; a: ReactNode }[] = [
     q: "What happens to my photo?",
     a: (
       <>
-        It's used only to find the object and build your template. It's kept while you're working on it and deleted
-        automatically a few hours later. It's never shared. The{" "}
-        <a href={PRIVACY_PATH} className="underline underline-offset-4 hover:text-foreground">
+        It's used only to find the object and build your template. It's kept
+        while you're working on it and deleted automatically a few hours later.
+        It's never shared. The{" "}
+        <a
+          href={PRIVACY_PATH}
+          className="underline underline-offset-4 hover:text-foreground"
+        >
           privacy policy
         </a>{" "}
         has the details.
@@ -96,12 +143,24 @@ const FAQ: { q: string; a: ReactNode }[] = [
   },
 ];
 
-function Section({ id, title, lead, children }: { id: string; title: string; lead?: string; children: ReactNode }) {
+function Section({
+  id,
+  title,
+  lead,
+  children,
+}: {
+  id: string;
+  title: string;
+  lead?: string;
+  children: ReactNode;
+}) {
   return (
     <section id={id} className="scroll-mt-20 py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto mb-10 max-w-2xl text-center">
-          <h2 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h2>
+          <h2 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
+            {title}
+          </h2>
           {lead && <p className="mt-3 text-muted-foreground">{lead}</p>}
         </div>
         {children}
@@ -131,27 +190,44 @@ export default function Landing() {
               {SITE.headline}
             </h1>
             <p className="mt-5 text-lg text-balance text-muted-foreground">
-              Upload a picture of an object and get printable ribs and rings to trace with your 3D pen. Put them
-              together and you have a 3D frame of it.
+              Upload a picture of an object and get printable ribs and rings to
+              trace with your 3D pen. Put them together and you have a 3D frame
+              of it.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <TryButton className="h-11 px-6 text-base" />
-              <Button asChild variant="outline" size="lg" className="h-11 px-6 text-base">
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="h-11 px-6 text-base"
+              >
                 <a href="#how">See how it works</a>
               </Button>
             </div>
-            <p className="mt-4 text-sm text-muted-foreground">Free. No sign-up. Works on any device.</p>
+            <p className="mt-4 text-sm text-muted-foreground">
+              Free. No sign-up. Works on any device.
+            </p>
           </div>
 
           <ol className="mt-14 grid items-center gap-4 sm:grid-cols-[1fr_auto_1fr_auto_1fr]">
             {PIPELINE.map((p, i) => (
-              <PipelineStep key={p.src} {...p} last={i === PIPELINE.length - 1} n={i + 1} />
+              <PipelineStep
+                key={p.src}
+                {...p}
+                last={i === PIPELINE.length - 1}
+                n={i + 1}
+              />
             ))}
           </ol>
         </div>
       </section>
 
-      <Section id="how" title="How it works" lead="Three steps from a photo on your phone to a frame on your desk.">
+      <Section
+        id="how"
+        title="How it works"
+        lead="Three steps from a photo on your phone to a frame on your desk."
+      >
         <ol className="grid gap-4 md:grid-cols-3">
           {STEPS.map(({ icon: Icon, title, text }, i) => (
             <li key={title}>
@@ -161,10 +237,14 @@ export default function Landing() {
                     <span className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
                       <Icon className="size-5" />
                     </span>
-                    <span className="text-sm font-medium text-muted-foreground">Step {i + 1}</span>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Step {i + 1}
+                    </span>
                   </div>
                   <CardTitle className="text-lg">{title}</CardTitle>
-                  <CardDescription className="leading-relaxed">{text}</CardDescription>
+                  <CardDescription className="leading-relaxed">
+                    {text}
+                  </CardDescription>
                 </CardHeader>
               </Card>
             </li>
@@ -186,13 +266,24 @@ export default function Landing() {
 
       {GALLERY.length > 0 && (
         <div className="border-t bg-muted/40">
-          <Section id="examples" title="Made with it" lead="Frames people have built from their own photos.">
+          <Section
+            id="examples"
+            title="Made with it"
+            lead="Frames people have built from their own photos."
+          >
             <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {GALLERY.map((g) => (
                 <li key={g.src}>
                   <figure className="overflow-hidden rounded-xl border bg-card">
-                    <img src={g.src} alt={g.alt} loading="lazy" className="aspect-[4/3] w-full object-cover" />
-                    <figcaption className="px-4 py-3 text-sm text-muted-foreground">{g.caption}</figcaption>
+                    <img
+                      src={g.src}
+                      alt={g.alt}
+                      loading="lazy"
+                      className="aspect-[4/3] w-full object-cover"
+                    />
+                    <figcaption className="px-4 py-3 text-sm text-muted-foreground">
+                      {g.caption}
+                    </figcaption>
                   </figure>
                 </li>
               ))}
@@ -208,9 +299,14 @@ export default function Landing() {
               <Accordion type="multiple">
                 {FAQ.map(({ q, a }) => (
                   <AccordionItem key={q} value={q}>
-                    <AccordionTrigger className="text-base">{q}</AccordionTrigger>
+                    <AccordionTrigger className="text-base">
+                      {q}
+                    </AccordionTrigger>
                     {/* forceMount keeps answers in the pre-rendered HTML for search engines; closed ones are hidden. */}
-                    <AccordionContent forceMount className="leading-relaxed text-muted-foreground">
+                    <AccordionContent
+                      forceMount
+                      className="leading-relaxed text-muted-foreground"
+                    >
                       {a}
                     </AccordionContent>
                   </AccordionItem>
@@ -223,9 +319,18 @@ export default function Landing() {
 
       <section className="border-t bg-primary text-primary-foreground">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 px-4 py-16 text-center sm:px-6">
-          <h2 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">Got a 3D pen? Pick a photo.</h2>
-          <p className="max-w-xl opacity-80">Your first template takes about a minute.</p>
-          <Button asChild size="lg" variant="secondary" className="h-11 px-6 text-base">
+          <h2 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
+            Got a 3D pen? Pick a photo.
+          </h2>
+          <p className="max-w-xl opacity-80">
+            Your first template takes about a minute.
+          </p>
+          <Button
+            asChild
+            size="lg"
+            variant="secondary"
+            className="h-11 px-6 text-base"
+          >
             <a href={APP_PATH}>
               Try it free <ArrowRight />
             </a>
@@ -236,14 +341,26 @@ export default function Landing() {
   );
 }
 
-function PipelineStep({ src, label, alt, n, last }: (typeof PIPELINE)[number] & { n: number; last: boolean }) {
+function PipelineStep({
+  src,
+  label,
+  alt,
+  n,
+  last,
+}: (typeof PIPELINE)[number] & { n: number; last: boolean }) {
   return (
     <>
       <li>
         <figure className="overflow-hidden rounded-xl border bg-card shadow-sm">
           {/* Always on white: these are paper and photo, not UI. */}
           <div className="flex aspect-[4/3] items-center justify-center bg-white p-3">
-            <img src={src} alt={alt} width={400} height={300} className="size-full object-contain" />
+            <img
+              src={src}
+              alt={alt}
+              width={400}
+              height={300}
+              className="size-full object-contain"
+            />
           </div>
           <figcaption className="flex items-center gap-2 border-t px-4 py-2.5 text-sm font-medium">
             <span className="flex size-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">

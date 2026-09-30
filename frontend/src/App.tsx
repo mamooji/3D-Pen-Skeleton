@@ -1,18 +1,44 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { AlertCircle, Box, Download, FileText, Loader2, PenTool, TriangleAlert } from "lucide-react";
-import { ApiError, DEFAULT_PARAMS, exportPdf, segment, template, type Params, type TemplateResult } from "./api";
+import {
+  AlertCircle,
+  Box,
+  Download,
+  FileText,
+  Loader2,
+  PenTool,
+  TriangleAlert,
+} from "lucide-react";
+import {
+  ApiError,
+  DEFAULT_PARAMS,
+  exportPdf,
+  segment,
+  template,
+  type Params,
+  type TemplateResult,
+} from "./api";
 import { shrinkPhoto } from "./lib/image";
 import Uploader from "./components/Uploader";
 import Controls from "./components/Controls";
 import TemplatePreview from "./components/TemplatePreview";
 import { ModeToggle } from "@/components/mode-toggle";
-import { SupportButton, SupportPrompt, supportPromptWanted } from "@/components/support";
+import {
+  SupportButton,
+  SupportPrompt,
+  supportPromptWanted,
+} from "@/components/support";
 import { track } from "@/lib/analytics";
 import { SITE } from "@/site";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -55,11 +81,15 @@ export default function App() {
   }
 
   /** Run `fn` with the current image, re-uploading the photo once if the server says it has expired. */
-  async function withImage<T>(id: string, fn: (id: string) => Promise<T>): Promise<T> {
+  async function withImage<T>(
+    id: string,
+    fn: (id: string) => Promise<T>,
+  ): Promise<T> {
     try {
       return await fn(id);
     } catch (e) {
-      if (!(e instanceof ApiError && e.status === 404 && photo.current)) throw e;
+      if (!(e instanceof ApiError && e.status === 404 && photo.current))
+        throw e;
       const r = await segment(photo.current);
       return fn(r.image_id);
     }
@@ -72,7 +102,9 @@ export default function App() {
     const timer = setTimeout(async () => {
       setBuilding(true);
       try {
-        setResult(await withImage(imageId, (id) => template(id, params, ctrl.signal)));
+        setResult(
+          await withImage(imageId, (id) => template(id, params, ctrl.signal)),
+        );
         setError(null);
       } catch (e) {
         if ((e as Error).name !== "AbortError") setError((e as Error).message);
@@ -110,11 +142,17 @@ export default function App() {
     <div className="min-h-svh bg-muted/40">
       <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
-          <a href="/" aria-label="Home" className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <a
+            href="/"
+            aria-label="Home"
+            className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground"
+          >
             <PenTool className="size-5" />
           </a>
           <div className="min-w-0 flex-1">
-            <h1 className="font-heading text-base leading-tight font-semibold">{SITE.name}</h1>
+            <h1 className="font-heading text-base leading-tight font-semibold">
+              {SITE.name}
+            </h1>
             <p className="truncate text-sm text-muted-foreground">
               Turn a photo into traceable pieces for a 3D-pen frame.
             </p>
@@ -129,9 +167,22 @@ export default function App() {
           <Uploader onFile={onFile} busy={segmenting} cutout={cutout} />
           {imageId && (
             <>
-              <Controls params={params} resolved={result?.info.params} onChange={setParams} />
-              <Button size="lg" className="h-11 w-full text-base" onClick={onDownload} disabled={downloading || !result}>
-                {downloading ? <Loader2 className="animate-spin" /> : <Download />}
+              <Controls
+                params={params}
+                resolved={result?.info.params}
+                onChange={setParams}
+              />
+              <Button
+                size="lg"
+                className="h-11 w-full text-base"
+                onClick={onDownload}
+                disabled={downloading || !result}
+              >
+                {downloading ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Download />
+                )}
                 {downloading ? "Preparing PDF…" : "Download PDF"}
               </Button>
               {result && (
@@ -142,7 +193,8 @@ export default function App() {
                     {result.info.pages} page{result.info.pages === 1 ? "" : "s"}
                   </Badge>
                   <Badge variant="outline">
-                    {(result.info.size_mm[0] / 10).toFixed(1)} × {(result.info.size_mm[1] / 10).toFixed(1)} cm
+                    {(result.info.size_mm[0] / 10).toFixed(1)} ×{" "}
+                    {(result.info.size_mm[1] / 10).toFixed(1)} cm
                   </Badge>
                 </div>
               )}
@@ -160,10 +212,15 @@ export default function App() {
             </Alert>
           )}
           {result?.warnings.map((w) => (
-            <Alert key={w} className="border-amber-500/40 text-amber-700 dark:text-amber-400">
+            <Alert
+              key={w}
+              className="border-amber-500/40 text-amber-700 dark:text-amber-400"
+            >
               <TriangleAlert />
               <AlertTitle>Heads up</AlertTitle>
-              <AlertDescription className="text-amber-700/90 dark:text-amber-400/90">{w}</AlertDescription>
+              <AlertDescription className="text-amber-700/90 dark:text-amber-400/90">
+                {w}
+              </AlertDescription>
             </Alert>
           ))}
 
@@ -191,7 +248,11 @@ export default function App() {
                 <TemplatePreview pages={result.pages} />
               </TabsContent>
               <TabsContent value="3d">
-                <Suspense fallback={<Skeleton className="h-[min(70vh,640px)] w-full rounded-xl" />}>
+                <Suspense
+                  fallback={
+                    <Skeleton className="h-[min(70vh,640px)] w-full rounded-xl" />
+                  }
+                >
                   <Viewer3D model={result.model} />
                 </Suspense>
               </TabsContent>
@@ -204,10 +265,24 @@ export default function App() {
 }
 
 const STEPS = [
-  <>Upload a <strong className="text-foreground">side-view</strong> photo of one object, ideally on a plain background.</>,
-  <>The app cuts out the object and uses its outline as the <strong className="text-foreground">profile</strong>.</>,
-  <>It rounds the outline into a 3D shape and slices it into numbered <strong className="text-foreground">ribs</strong> (front view) and lettered <strong className="text-foreground">rings</strong> (top view).</>,
-  <>Print the PDF at 100%, trace every piece with your 3D pen, then stand the ribs up on the profile at their numbered lines. Small ticks show where pieces meet.</>,
+  <>
+    Upload a <strong className="text-foreground">side-view</strong> photo of one
+    object, ideally on a plain background.
+  </>,
+  <>
+    The app cuts out the object and uses its outline as the{" "}
+    <strong className="text-foreground">profile</strong>.
+  </>,
+  <>
+    It rounds the outline into a 3D shape and slices it into numbered{" "}
+    <strong className="text-foreground">ribs</strong> (front view) and lettered{" "}
+    <strong className="text-foreground">rings</strong> (top view).
+  </>,
+  <>
+    Print the PDF at 100%, trace every piece with your 3D pen, then stand the
+    ribs up on the profile at their numbered lines. Small ticks show where
+    pieces meet.
+  </>,
 ];
 
 function HowItWorks() {

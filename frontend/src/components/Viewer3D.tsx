@@ -20,7 +20,11 @@ function lineColor(hex: string, dark: boolean): THREE.Color {
 export default function Viewer3D({ model }: { model: Polyline3D[] }) {
   const dark = useTheme().resolvedTheme === "dark";
   const host = useRef<HTMLDivElement>(null);
-  const view = useRef<{ camera: THREE.PerspectiveCamera; controls: OrbitControls; fitted: boolean } | null>(null);
+  const view = useRef<{
+    camera: THREE.PerspectiveCamera;
+    controls: OrbitControls;
+    fitted: boolean;
+  } | null>(null);
   const scene = useRef(new THREE.Scene());
   const group = useRef<THREE.Group | null>(null);
 
@@ -75,25 +79,40 @@ export default function Viewer3D({ model }: { model: Polyline3D[] }) {
     }
     const g = new THREE.Group();
     for (const line of model) {
-      const geom = new THREE.BufferGeometry().setFromPoints(line.pts.map(([x, y, z]) => new THREE.Vector3(x, y, z)));
-      g.add(new THREE.LineLoop(geom, new THREE.LineBasicMaterial({ color: lineColor(line.color, dark) })));
+      const geom = new THREE.BufferGeometry().setFromPoints(
+        line.pts.map(([x, y, z]) => new THREE.Vector3(x, y, z)),
+      );
+      g.add(
+        new THREE.LineLoop(
+          geom,
+          new THREE.LineBasicMaterial({ color: lineColor(line.color, dark) }),
+        ),
+      );
     }
     scene.current.add(g);
     group.current = g;
 
     if (view.current && !view.current.fitted) {
       view.current.fitted = true;
-      const sphere = new THREE.Box3().setFromObject(g).getBoundingSphere(new THREE.Sphere());
+      const sphere = new THREE.Box3()
+        .setFromObject(g)
+        .getBoundingSphere(new THREE.Sphere());
       const { camera, controls } = view.current;
-      const dist = (sphere.radius / Math.sin((camera.fov * Math.PI) / 360)) * 1.1;
-      camera.position.copy(sphere.center).add(new THREE.Vector3(0.8, 0.35, 1).normalize().multiplyScalar(dist));
+      const dist =
+        (sphere.radius / Math.sin((camera.fov * Math.PI) / 360)) * 1.1;
+      camera.position
+        .copy(sphere.center)
+        .add(new THREE.Vector3(0.8, 0.35, 1).normalize().multiplyScalar(dist));
       controls.target.copy(sphere.center);
     }
   }, [model, dark]);
 
   return (
     <Card className="gap-0 py-0">
-      <div ref={host} className="h-[min(70vh,640px)] cursor-grab active:cursor-grabbing" />
+      <div
+        ref={host}
+        className="h-[min(70vh,640px)] cursor-grab active:cursor-grabbing"
+      />
       <p className="border-t px-4 py-2.5 text-xs text-muted-foreground">
         Drag to rotate · scroll to zoom · right-drag to pan
       </p>

@@ -5,7 +5,13 @@ import { SupportButton } from "@/components/support";
 import { Button } from "@/components/ui/button";
 import { APP_PATH, PRIVACY_PATH, SITE, TERMS_PATH } from "@/site";
 
-export function TryButton({ size = "lg", className }: { size?: "lg" | "default"; className?: string }) {
+export function TryButton({
+  size = "lg",
+  className,
+}: {
+  size?: "lg" | "default";
+  className?: string;
+}) {
   return (
     <Button asChild size={size} className={className}>
       <a href={APP_PATH}>
@@ -16,7 +22,13 @@ export function TryButton({ size = "lg", className }: { size?: "lg" | "default";
 }
 
 /** Header and footer shared by the landing and legal pages. `nav` sits between the logo and the buttons. */
-export function Layout({ nav, children }: { nav?: ReactNode; children: ReactNode }) {
+export function Layout({
+  nav,
+  children,
+}: {
+  nav?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <div className="min-h-svh bg-background">
       <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
@@ -27,8 +39,18 @@ export function Layout({ nav, children }: { nav?: ReactNode; children: ReactNode
             </span>
             <span className="font-heading font-semibold">{SITE.name}</span>
           </a>
-          {nav && <nav className="ml-auto hidden items-center gap-1 text-sm sm:flex">{nav}</nav>}
-          <div className={nav ? "ml-auto flex items-center gap-2 sm:ml-2" : "ml-auto flex items-center gap-2"}>
+          {nav && (
+            <nav className="ml-auto hidden items-center gap-1 text-sm sm:flex">
+              {nav}
+            </nav>
+          )}
+          <div
+            className={
+              nav
+                ? "ml-auto flex items-center gap-2 sm:ml-2"
+                : "ml-auto flex items-center gap-2"
+            }
+          >
             <SupportButton />
             <ModeToggle />
             <TryButton size="default" />
@@ -40,10 +62,18 @@ export function Layout({ nav, children }: { nav?: ReactNode; children: ReactNode
 
       <footer className="border-t">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-muted-foreground sm:px-6">
-          <span suppressHydrationWarning>© {new Date().getFullYear()} {SITE.name}</span>
+          <span suppressHydrationWarning>
+            © {new Date().getFullYear()} {SITE.name}
+          </span>
           <div className="flex flex-wrap gap-x-4 gap-y-2">
             {SITE.donateUrl && (
-              <a href={SITE.donateUrl} target="_blank" rel="noopener" data-umami-event="kofi" className="hover:text-foreground">
+              <a
+                href={SITE.donateUrl}
+                target="_blank"
+                rel="noopener"
+                data-umami-event="kofi"
+                className="hover:text-foreground"
+              >
                 Support on Ko-fi
               </a>
             )}

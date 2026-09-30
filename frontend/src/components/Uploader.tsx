@@ -2,7 +2,13 @@ import { useRef, useState } from "react";
 import { ImageUp, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { PRIVACY_PATH, TERMS_PATH } from "@/site";
 
 interface Props {
@@ -63,14 +69,26 @@ export default function Uploader({ onFile, busy, cutout }: Props) {
           )}
         >
           {cutout ? (
-            <img src={cutout} alt="Detected object outline" className="max-h-64 rounded-md" />
+            <img
+              src={cutout}
+              alt="Detected object outline"
+              className="max-h-64 rounded-md"
+            />
           ) : (
             <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-              {busy ? <Loader2 className="size-6 animate-spin text-muted-foreground" /> : <ImageUp className="size-6 text-muted-foreground" />}
+              {busy ? (
+                <Loader2 className="size-6 animate-spin text-muted-foreground" />
+              ) : (
+                <ImageUp className="size-6 text-muted-foreground" />
+              )}
             </div>
           )}
           <div className="flex flex-col items-center gap-2">
-            {!cutout && <p className="text-sm text-muted-foreground">Drop a photo here, or</p>}
+            {!cutout && (
+              <p className="text-sm text-muted-foreground">
+                Drop a photo here, or
+              </p>
+            )}
             <Button
               type="button"
               variant={cutout ? "outline" : "default"}
@@ -82,17 +100,27 @@ export default function Uploader({ onFile, busy, cutout }: Props) {
               }}
             >
               {busy ? <Loader2 className="animate-spin" /> : <ImageUp />}
-              {busy ? "Processing…" : cutout ? "Use another photo" : "Choose photo"}
+              {busy
+                ? "Processing…"
+                : cutout
+                  ? "Use another photo"
+                  : "Choose photo"}
             </Button>
           </div>
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
           Photos are deleted automatically 6 hours after last use.{" "}
-          <a href={PRIVACY_PATH} className="underline underline-offset-4 hover:text-foreground">
+          <a
+            href={PRIVACY_PATH}
+            className="underline underline-offset-4 hover:text-foreground"
+          >
             Privacy
           </a>{" "}
           ·{" "}
-          <a href={TERMS_PATH} className="underline underline-offset-4 hover:text-foreground">
+          <a
+            href={TERMS_PATH}
+            className="underline underline-offset-4 hover:text-foreground"
+          >
             Terms
           </a>
         </p>

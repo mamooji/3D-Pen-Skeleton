@@ -3,13 +3,27 @@ import { ChevronDown, Info } from "lucide-react";
 import type { Params } from "../api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Props {
   params: Params;
@@ -17,7 +31,14 @@ interface Props {
   onChange: (p: Params) => void;
 }
 
-const DETAIL_LABELS = ["", "Very simple", "Simple", "Balanced", "Detailed", "Very detailed"];
+const DETAIL_LABELS = [
+  "",
+  "Very simple",
+  "Simple",
+  "Balanced",
+  "Detailed",
+  "Very detailed",
+];
 
 export default function Controls({ params, resolved, onChange }: Props) {
   const [advanced, setAdvanced] = useState(false);
@@ -65,7 +86,10 @@ export default function Controls({ params, resolved, onChange }: Props) {
 
         <div className="flex items-center justify-between gap-4">
           <Label htmlFor="paper">Paper</Label>
-          <Select value={params.paper} onValueChange={(v) => set({ paper: v as Params["paper"] })}>
+          <Select
+            value={params.paper}
+            onValueChange={(v) => set({ paper: v as Params["paper"] })}
+          >
             <SelectTrigger id="paper" className="w-32">
               <SelectValue />
             </SelectTrigger>
@@ -78,11 +102,24 @@ export default function Controls({ params, resolved, onChange }: Props) {
 
         <Separator />
 
-        <Collapsible open={advanced} onOpenChange={setAdvanced} className="flex flex-col gap-5">
+        <Collapsible
+          open={advanced}
+          onOpenChange={setAdvanced}
+          className="flex flex-col gap-5"
+        >
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="-mx-2.5 justify-between text-muted-foreground">
+            <Button
+              variant="ghost"
+              className="-mx-2.5 justify-between text-muted-foreground"
+            >
               Advanced
-              <ChevronDown className={advanced ? "rotate-180 transition-transform" : "transition-transform"} />
+              <ChevronDown
+                className={
+                  advanced
+                    ? "rotate-180 transition-transform"
+                    : "transition-transform"
+                }
+              />
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="flex flex-col gap-5">
@@ -93,7 +130,11 @@ export default function Controls({ params, resolved, onChange }: Props) {
               min={1}
               max={20}
               step={1}
-              display={params.ribs === null ? `${resolved?.ribs ?? "…"} (auto)` : String(params.ribs)}
+              display={
+                params.ribs === null
+                  ? `${resolved?.ribs ?? "…"} (auto)`
+                  : String(params.ribs)
+              }
               onChange={(v) => set({ ribs: v })}
             />
             <SliderField
@@ -103,7 +144,11 @@ export default function Controls({ params, resolved, onChange }: Props) {
               min={0}
               max={6}
               step={1}
-              display={params.rings === null ? `${resolved?.rings ?? "…"} (auto)` : String(params.rings)}
+              display={
+                params.rings === null
+                  ? `${resolved?.rings ?? "…"} (auto)`
+                  : String(params.rings)
+              }
               onChange={(v) => set({ rings: v })}
             />
             <SwitchField
@@ -146,13 +191,18 @@ function SliderField(props: {
           {props.help && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Info className="size-3.5 text-muted-foreground" aria-label={props.help} />
+                <Info
+                  className="size-3.5 text-muted-foreground"
+                  aria-label={props.help}
+                />
               </TooltipTrigger>
               <TooltipContent className="max-w-60">{props.help}</TooltipContent>
             </Tooltip>
           )}
         </Label>
-        <span className="text-sm text-muted-foreground tabular-nums">{props.display}</span>
+        <span className="text-sm text-muted-foreground tabular-nums">
+          {props.display}
+        </span>
       </div>
       <Slider
         id={props.id}
@@ -180,7 +230,11 @@ function SwitchField(props: {
         <Label htmlFor={props.id}>{props.label}</Label>
         <p className="text-xs text-muted-foreground">{props.description}</p>
       </div>
-      <Switch id={props.id} checked={props.checked} onCheckedChange={props.onChange} />
+      <Switch
+        id={props.id}
+        checked={props.checked}
+        onCheckedChange={props.onChange}
+      />
     </div>
   );
 }

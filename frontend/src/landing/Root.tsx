@@ -5,7 +5,11 @@ import Landing from "./Landing";
 import { Privacy, Terms } from "./Legal";
 
 // Pages that share this entry, by URL path. Each has an HTML file in PAGES (vite.config.ts).
-export const PAGES: Record<string, () => JSX.Element> = { "/": Landing, [PRIVACY_PATH]: Privacy, [TERMS_PATH]: Terms };
+export const PAGES: Record<string, () => JSX.Element> = {
+  "/": Landing,
+  [PRIVACY_PATH]: Privacy,
+  [TERMS_PATH]: Terms,
+};
 
 // Rendered to static HTML at build time (entry-server.tsx) and hydrated in the browser (main.tsx).
 export default function LandingRoot({ path }: { path: string }) {

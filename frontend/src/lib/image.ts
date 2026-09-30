@@ -21,7 +21,9 @@ export async function shrinkPhoto(file: File): Promise<Blob> {
     ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     // JPEGs have no transparency to keep; anything else might already be a cut-out, so keep its alpha.
     const type = file.type === "image/jpeg" ? "image/jpeg" : "image/png";
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, 0.9));
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, type, 0.9),
+    );
     return blob ?? file;
   } finally {
     bitmap.close();

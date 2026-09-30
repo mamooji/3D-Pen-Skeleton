@@ -60,7 +60,9 @@ const FALLBACK: Record<number, string> = {
 
 async function check(res: Response): Promise<Response> {
   if (res.ok) return res;
-  let msg = FALLBACK[res.status] ?? "Something went wrong on our side. Please try again.";
+  let msg =
+    FALLBACK[res.status] ??
+    "Something went wrong on our side. Please try again.";
   try {
     const body = await res.json();
     if (typeof body.detail === "string") msg = body.detail;
@@ -75,18 +77,29 @@ async function request(input: string, init: RequestInit): Promise<Response> {
     return await check(await fetch(input, init));
   } catch (e) {
     // fetch only throws TypeError when the request never got a response.
-    if (e instanceof TypeError) throw new ApiError("Can't reach the server. Check your connection and try again.", 0);
+    if (e instanceof TypeError)
+      throw new ApiError(
+        "Can't reach the server. Check your connection and try again.",
+        0,
+      );
     throw e;
   }
 }
 
-export async function segment(photo: Blob): Promise<{ image_id: string; preview: string }> {
+export async function segment(
+  photo: Blob,
+): Promise<{ image_id: string; preview: string }> {
   const form = new FormData();
   form.append("file", photo, "photo");
   return (await request("/api/segment", { method: "POST", body: form })).json();
 }
 
-function post(path: string, imageId: string, params: Params, signal?: AbortSignal) {
+function post(
+  path: string,
+  imageId: string,
+  params: Params,
+  signal?: AbortSignal,
+) {
   return request(path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -95,10 +108,17 @@ function post(path: string, imageId: string, params: Params, signal?: AbortSigna
   });
 }
 
-export async function template(imageId: string, params: Params, signal?: AbortSignal): Promise<TemplateResult> {
+export async function template(
+  imageId: string,
+  params: Params,
+  signal?: AbortSignal,
+): Promise<TemplateResult> {
   return (await post("/api/template", imageId, params, signal)).json();
 }
 
-export async function exportPdf(imageId: string, params: Params): Promise<Blob> {
+export async function exportPdf(
+  imageId: string,
+  params: Params,
+): Promise<Blob> {
   return (await post("/api/export", imageId, params)).blob();
 }

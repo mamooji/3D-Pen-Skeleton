@@ -9,7 +9,9 @@ export default function TemplatePreview({ pages }: { pages: string[] }) {
             className="overflow-hidden rounded-sm bg-white shadow-md ring-1 ring-foreground/10 [&_svg]:block [&_svg]:h-auto [&_svg]:w-full"
             dangerouslySetInnerHTML={{ __html: svg }}
           />
-          <figcaption className="text-center text-xs text-muted-foreground">Page {i + 1}</figcaption>
+          <figcaption className="text-center text-xs text-muted-foreground">
+            Page {i + 1}
+          </figcaption>
         </figure>
       ))}
     </div>

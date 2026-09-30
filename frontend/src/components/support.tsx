@@ -10,8 +10,17 @@ const HIDE_DAYS = 30;
 export function SupportButton() {
   if (!SITE.donateUrl) return null;
   return (
-    <Button asChild variant="outline" aria-label="Support this project on Ko-fi">
-      <a href={SITE.donateUrl} target="_blank" rel="noopener" data-umami-event="kofi">
+    <Button
+      asChild
+      variant="outline"
+      aria-label="Support this project on Ko-fi"
+    >
+      <a
+        href={SITE.donateUrl}
+        target="_blank"
+        rel="noopener"
+        data-umami-event="kofi"
+      >
         <Coffee />
         <span className="hidden sm:inline">Support</span>
       </a>
@@ -49,12 +58,18 @@ export function SupportPrompt({ onClose }: { onClose: () => void }) {
       <AlertTitle>Your template is downloading. Enjoy the build!</AlertTitle>
       <AlertDescription>
         <p>
-          {SITE.name} is free, with no ads or sign-up. If it saved you some time, a small tip on Ko-fi helps keep it
-          running.
+          {SITE.name} is free, with no ads or sign-up. If it saved you some
+          time, a small tip on Ko-fi helps keep it running.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Button asChild size="sm">
-            <a href={SITE.donateUrl} target="_blank" rel="noopener" data-umami-event="kofi" onClick={close}>
+            <a
+              href={SITE.donateUrl}
+              target="_blank"
+              rel="noopener"
+              data-umami-event="kofi"
+              onClick={close}
+            >
               <Coffee /> Buy me a coffee
             </a>
           </Button>
@@ -63,7 +78,13 @@ export function SupportPrompt({ onClose }: { onClose: () => void }) {
           </Button>
         </div>
       </AlertDescription>
-      <Button size="icon" variant="ghost" className="absolute top-2 right-2 size-7" aria-label="Close" onClick={onClose}>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="absolute top-2 right-2 size-7"
+        aria-label="Close"
+        onClick={onClose}
+      >
         <X />
       </Button>
     </Alert>

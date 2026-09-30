@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 
 export type Theme = "light" | "dark" | "system";
 
@@ -27,7 +33,10 @@ function readStored(): Theme {
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(readStored);
   // No window when the landing page is pre-rendered at build time.
-  const [systemDark, setSystemDark] = useState(() => typeof window !== "undefined" && window.matchMedia(DARK_QUERY).matches);
+  const [systemDark, setSystemDark] = useState(
+    () =>
+      typeof window !== "undefined" && window.matchMedia(DARK_QUERY).matches,
+  );
 
   useEffect(() => {
     const mq = window.matchMedia(DARK_QUERY);
@@ -36,7 +45,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  const resolvedTheme = theme === "system" ? (systemDark ? "dark" : "light") : theme;
+  const resolvedTheme =
+    theme === "system" ? (systemDark ? "dark" : "light") : theme;
 
   useEffect(() => {
     const root = document.documentElement;
@@ -53,7 +63,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setThemeState(t);
   };
 
-  return <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 }
 
 export function useTheme(): ThemeState {
