@@ -17,7 +17,16 @@ Live on the server's IP (plain HTTP): landing page at `/`, tool at `/app/`, Ko-f
   - Tell Caddy to trust Cloudflare's IP ranges (`trusted_proxies`). Otherwise every visitor shares one IP and one upload rate limit.
   - Point the Ko-fi page's website link at the domain.
 
-**Loose ends:** only the Windows PC's SSH key is on the server (add the Mac's to `~deploy/.ssh/authorized_keys`). The gallery needs photos of real builds.
+**First thing on the Mac: give it SSH access to the server.** Right now only the Windows PC's key (and the GitHub Actions deploy key) can log in.
+1. Get the server IP from the Hetzner Cloud console (server `skeleton-3d-prod`). It isn't in the repo, and GitHub won't show the `VPS_HOST` secret's value.
+2. On the Mac, run `ssh-keygen -lf ~/.ssh/id_ed25519.pub` (or `ls ~/.ssh/*.pub` if that file doesn't exist) and note the `SHA256:...` fingerprint.
+3. Match it against https://github.com/settings/keys. GitHub lists three keys: `qVrygKbI…` is the Windows PC, and `gcpHcRnm…` and `LldZ04t8…` are unknown (one is probably the Mac). Delete any key there you don't recognize.
+4. Add the Mac's key to the server, using either route:
+   - **From the Windows PC:** `cat <mac key>.pub | ssh deploy@<IP> 'cat >> ~/.ssh/authorized_keys'`
+   - **From the Mac, without the PC:** in the Hetzner console, open the server's **Rescue** tab and use **Reset root password**. Then open the **Console** (>_) button, log in as `root`, and run `curl -s https://github.com/mamooji.keys | ssh-keygen -lf -` to see which line is the Mac's key (lines are in the order listed above). Add that line with `curl -s https://github.com/mamooji.keys | sed -n '<line>p' >> /home/deploy/.ssh/authorized_keys`. Root SSH stays disabled; the console isn't SSH.
+5. Test with `ssh deploy@<IP> 'echo ok'`.
+
+**Other loose ends:** the gallery needs photos of real builds.
 
 ## Key numbers (measured on an M1 Pro, 1600×1200 photo)
 
