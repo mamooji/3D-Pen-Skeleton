@@ -79,6 +79,9 @@ jobs:
         # The registry token goes over stdin so it never appears in a command line on the server.
         # APP_IMAGE is pinned in .env (next to settings like SITE_ADDRESS), so a manual `docker compose up`
         # keeps this version. Roll back by setting it to an earlier commit SHA and running `docker compose up -d`.
+        # A changed Caddyfile alone does not recreate the Caddy container, so it is reloaded explicitly. The old
+        # top-level Caddyfile is from before the config moved to caddy/.
+        # The remote script is in single quotes: never put a single quote (or an apostrophe) inside it.
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | ssh "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" '
             set -e
@@ -89,8 +92,7 @@ jobs:
             echo "APP_IMAGE=${{ env.IMAGE }}:${{ github.sha }}" >> .env
             docker compose pull app
             docker compose up -d --no-build --wait --wait-timeout 120
-            # A changed Caddyfile alone doesn't recreate the container, so reload it.
-            rm -f Caddyfile  # from before the config moved to caddy/
+            rm -f Caddyfile
             docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
             docker logout ghcr.io
             docker image prune -f
