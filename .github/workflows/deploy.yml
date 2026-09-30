@@ -1,0 +1,89 @@
+# Test every push and PR; on main, also build the image, push it to GHCR, and deploy it to the VPS.
+name: CI / Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  IMAGE: ghcr.io/mamooji/3d-pen-skeleton
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r backend/requirements.txt
+      - run: python -m pytest -q
+        working-directory: backend
+
+  build:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment: production
+    concurrency: production
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Copy compose files
+        run: scp docker-compose.yml Caddyfile "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/skeleton3d/"
+      - name: Pull and restart
+        # The registry token goes over stdin so it never appears in a command line on the server.
+        # APP_IMAGE is pinned in .env (next to settings like SITE_ADDRESS), so a manual `docker compose up`
+        # keeps this version. Roll back by setting it to an earlier commit SHA and running `docker compose up -d`.
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | ssh "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" '
+            set -e
+            cd /opt/skeleton3d
+            docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+            touch .env
+            sed -i "/^APP_IMAGE=/d" .env
+            echo "APP_IMAGE=${{ env.IMAGE }}:${{ github.sha }}" >> .env
+            docker compose pull app
+            docker compose up -d --no-build --wait --wait-timeout 120
+            docker logout ghcr.io
+            docker image prune -f
+          '

@@ -13,11 +13,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     U2NET_HOME=/opt/models \
-    NUMBA_CACHE_DIR=/opt/numba-cache
+    NUMBA_CACHE_DIR=/opt/numba-cache \
+    NUMBA_CPU_NAME=generic
 WORKDIR /srv/backend
 
 COPY backend/requirements.txt ./
-# numba keys its cache on source mtimes, and image layers drop sub-second mtimes,
+# numba keys its cache on source mtimes and the CPU (hence NUMBA_CPU_NAME=generic, since CI builds the image on a
+# different CPU than the server). Image layers drop sub-second mtimes,
 # so round pymatting's to whole seconds or the cache built below never matches at runtime.
 RUN pip install -r requirements.txt \
     && find /usr/local/lib/python3.12/site-packages/pymatting -name "*.py" -exec touch -d "2000-01-01 00:00:00" {} +
