@@ -6,6 +6,8 @@ export const SITE = {
   title: "3D Pen Skeleton: turn any photo into a 3D-pen template",
   description:
     "Upload a photo of an object and get a free printable template of numbered ribs and rings. Trace them with your 3D pen and assemble a 3D frame.",
+  // Ko-fi page (https://ko-fi.com/...). The Support buttons and post-download prompt stay hidden while this is empty.
+  donateUrl: "https://ko-fi.com/mamooji",
 };
 
 export const APP_PATH = "/app/";

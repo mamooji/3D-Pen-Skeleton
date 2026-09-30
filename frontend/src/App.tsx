@@ -6,6 +6,7 @@ import Uploader from "./components/Uploader";
 import Controls from "./components/Controls";
 import TemplatePreview from "./components/TemplatePreview";
 import { ModeToggle } from "@/components/mode-toggle";
+import { SupportButton, SupportPrompt, supportPromptWanted } from "@/components/support";
 import { SITE } from "@/site";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,7 @@ export default function App() {
   const [building, setBuilding] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [thanks, setThanks] = useState(false);
   // The uploaded photo, so it can be sent again if the server has forgotten it.
   const photo = useRef<Blob | null>(null);
 
@@ -93,6 +95,7 @@ export default function App() {
       a.download = "skeleton-template.pdf";
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      if (supportPromptWanted()) setThanks(true);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -113,6 +116,7 @@ export default function App() {
               Turn a photo into traceable pieces for a 3D-pen frame.
             </p>
           </div>
+          <SupportButton />
           <ModeToggle />
         </div>
       </header>
@@ -144,6 +148,7 @@ export default function App() {
         </aside>
 
         <main className="flex min-w-0 flex-col gap-4">
+          {thanks && <SupportPrompt onClose={() => setThanks(false)} />}
           {error && (
             <Alert variant="destructive">
               <AlertCircle />

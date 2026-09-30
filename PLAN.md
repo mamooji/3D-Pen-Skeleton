@@ -70,9 +70,9 @@ push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr
 - [x] Open Graph image, favicon, meta tags (set `SITE_URL` once there is a domain, for absolute preview URLs)
 
 ### 3. Donations (no backend code)
-- [ ] Stripe Payment Link (or Ko-fi / Buy Me a Coffee)
-- [ ] Small button in the header
-- [ ] Friendly prompt right after PDF export
+- [x] Ko-fi (ko-fi.com/mamooji): 0% on one-off tips with Contributor off, only card/PayPal processing fees
+- [x] Small button in the header
+- [x] Friendly prompt right after PDF export
 
 ### 4. Legal and analytics
 - [ ] Privacy policy (photos are processed and not kept; the server is EU-hosted, so GDPR applies)

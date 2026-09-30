@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
+import { SupportButton } from "@/components/support";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -131,6 +132,7 @@ export default function Landing() {
             </Button>
           </nav>
           <div className="ml-auto flex items-center gap-2 sm:ml-2">
+            <SupportButton />
             <ModeToggle />
             <TryButton size="default" />
           </div>
@@ -251,9 +253,16 @@ export default function Landing() {
       <footer className="border-t">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-muted-foreground sm:px-6">
           <span suppressHydrationWarning>© {new Date().getFullYear()} {SITE.name}</span>
-          <a href={APP_PATH} className="hover:text-foreground">
-            Open the app
-          </a>
+          <div className="flex gap-4">
+            {SITE.donateUrl && (
+              <a href={SITE.donateUrl} target="_blank" rel="noopener" className="hover:text-foreground">
+                Support on Ko-fi
+              </a>
+            )}
+            <a href={APP_PATH} className="hover:text-foreground">
+              Open the app
+            </a>
+          </div>
         </div>
       </footer>
     </div>
