@@ -17,15 +17,6 @@ Live on the server's IP (plain HTTP): landing page at `/`, tool at `/app/`, Ko-f
   - Tell Caddy to trust Cloudflare's IP ranges (`trusted_proxies`). Otherwise every visitor shares one IP and one upload rate limit.
   - Point the Ko-fi page's website link at the domain.
 
-**First thing on the Mac: give it SSH access to the server.** Right now only the Windows PC's key (and the GitHub Actions deploy key) can log in.
-1. Get the server IP from the Hetzner Cloud console (server `skeleton-3d-prod`). It isn't in the repo, and GitHub won't show the `VPS_HOST` secret's value.
-2. On the Mac, run `ssh-keygen -lf ~/.ssh/id_ed25519.pub` (or `ls ~/.ssh/*.pub` if that file doesn't exist) and note the `SHA256:...` fingerprint.
-3. Match it against https://github.com/settings/keys. GitHub lists three keys: `qVrygKbI…` is the Windows PC, and `gcpHcRnm…` and `LldZ04t8…` are unknown (one is probably the Mac). Delete any key there you don't recognize.
-4. Add the Mac's key to the server, using either route:
-   - **From the Windows PC:** `cat <mac key>.pub | ssh deploy@<IP> 'cat >> ~/.ssh/authorized_keys'`
-   - **From the Mac, without the PC:** in the Hetzner console, open the server's **Rescue** tab and use **Reset root password**. Then open the **Console** (>_) button, log in as `root`, and run `curl -s https://github.com/mamooji.keys | ssh-keygen -lf -` to see which line is the Mac's key (lines are in the order listed above). Add that line with `curl -s https://github.com/mamooji.keys | sed -n '<line>p' >> /home/deploy/.ssh/authorized_keys`. Root SSH stays disabled; the console isn't SSH.
-5. Test with `ssh deploy@<IP> 'echo ok'`.
-
 **Other loose ends:** the gallery needs photos of real builds.
 
 ## Key numbers (measured on an M1 Pro, 1600×1200 photo)
@@ -43,7 +34,7 @@ Live on the server's IP (plain HTTP): landing page at `/`, tool at `/app/`, Ko-f
 ## Hosting
 
 - **Hetzner Cloud, Regular Performance, 3 vCPU / 4 GB / 80 GB** (CA$37.49/mo; Cost-Optimized wasn't available), Ubuntu 24.04. 4 GB is why background removal runs one at a time (`SEGMENT_CONCURRENCY=1`) with a 4 GB swap file. Measured on the server: 2–3 s per upload, ~1.7 GB RAM in use.
-- Log in as `deploy` (SSH keys only, passwordless sudo). The IP is in the `VPS_HOST` GitHub secret. Hetzner Cloud Firewall and `ufw` both allow only 22/80/443.
+- Log in as `deploy` (SSH keys only, passwordless sudo). The IP is in the `VPS_HOST` GitHub secret and the Mac's SSH config (kept out of the repo so Cloudflare can hide it). Authorized keys: the Windows PC, the Mac (`ssh skeleton` via `~/.ssh/config.d/skeleton.conf`), and the GitHub Actions deploy key. To add a machine without SSH, use the Hetzner web console (Rescue → Reset root password, then Console) and append the key with `>>`. Hetzner Cloud Firewall and `ufw` both allow only 22/80/443.
 - When resizing, choose **"CPU and RAM only"** so the disk doesn't grow and a downgrade stays possible.
 - **Cloudflare** (free plan) in front: DDoS protection, static caching, hides the origin IP.
 - After Phase 2 moves background removal to the browser, downsize to ~2 vCPU / 4 GB (~€4–5/mo).
