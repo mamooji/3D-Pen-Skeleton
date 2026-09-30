@@ -2,6 +2,23 @@
 
 Goal: launch the app publicly as fast as possible, cheaply, and able to handle many users at once. Accounts and paid tiers come after launch.
 
+## Where we left off (2026-09-30)
+
+Live on the server's IP (plain HTTP): landing page at `/`, tool at `/app/`, Ko-fi tips. Every push to `main` deploys automatically. Phase 1 §1–3 and most of §5 are done.
+
+**Waiting on:**
+- **Stripe review of the Ko-fi account.** Stripe flagged the new, empty Ko-fi page. We added content and "tip" wording and submitted their form. Until it's approved, card payments may be paused; PayPal still works. Never say "donate" or "donations" in public copy: Stripe only allows that for registered charities.
+
+**Next up (pick one):**
+- **§4 Legal and analytics:** privacy policy, terms, cookie-free analytics.
+- **Phase 0 domain + Cloudflare.** When the domain exists:
+  - Add `SITE_ADDRESS=<domain>` to `/opt/skeleton3d/.env` on the server, so Caddy gets an HTTPS certificate.
+  - Pass `SITE_URL=https://<domain>` to the Docker build as a build arg. The workflow doesn't pass it yet, and link previews need it for absolute image URLs.
+  - Tell Caddy to trust Cloudflare's IP ranges (`trusted_proxies`). Otherwise every visitor shares one IP and one upload rate limit.
+  - Point the Ko-fi page's website link at the domain.
+
+**Loose ends:** only the Windows PC's SSH key is on the server (add the Mac's to `~deploy/.ssh/authorized_keys`). The gallery needs photos of real builds.
+
 ## Key numbers (measured on an M1 Pro, 1600×1200 photo)
 
 | Step | Time | Memory |
@@ -16,7 +33,8 @@ Goal: launch the app publicly as fast as possible, cheaply, and able to handle m
 
 ## Hosting
 
-- **Hetzner Cloud, shared x86, 4 vCPU / 8 GB** (~€8–15/mo), in the location closest to the audience.
+- **Hetzner Cloud, Regular Performance, 3 vCPU / 4 GB / 80 GB** (CA$37.49/mo; Cost-Optimized wasn't available), Ubuntu 24.04. 4 GB is why background removal runs one at a time (`SEGMENT_CONCURRENCY=1`) with a 4 GB swap file. Measured on the server: 2–3 s per upload, ~1.7 GB RAM in use.
+- Log in as `deploy` (SSH keys only, passwordless sudo). The IP is in the `VPS_HOST` GitHub secret. Hetzner Cloud Firewall and `ufw` both allow only 22/80/443.
 - When resizing, choose **"CPU and RAM only"** so the disk doesn't grow and a downgrade stays possible.
 - **Cloudflare** (free plan) in front: DDoS protection, static caching, hides the origin IP.
 - After Phase 2 moves background removal to the browser, downsize to ~2 vCPU / 4 GB (~€4–5/mo).
@@ -36,8 +54,10 @@ push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr
 
 - Multi-stage `Dockerfile`: Node builds `frontend/dist`, Python slim runs uvicorn with **one worker**. The rembg model is downloaded during the build and ships in the image.
 - `docker-compose.yml`: `app` + `caddy` (automatic Let's Encrypt, no default upload size limit).
-- GitHub Secrets: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` (a deploy-only key).
-- Images are tagged `latest` + commit SHA. Roll back by pinning an earlier SHA and running `up -d`.
+- GitHub Secrets: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` (a deploy-only key), `VPS_KNOWN_HOSTS` (the server's SSH host key).
+- Images are tagged `latest` + commit SHA. Each deploy pins its SHA as `APP_IMAGE` in `/opt/skeleton3d/.env` and only rewrites that line, so keep other settings (e.g. `SITE_ADDRESS`) in the same file. Roll back by setting `APP_IMAGE` to an earlier SHA and running `docker compose up -d`.
+- Processed uploads live in the `uploads` Docker volume and are deleted 6 h after last use.
+- The deploy restarts the app, so there's ~20 s of downtime per deploy.
 
 ---
 
@@ -69,20 +89,20 @@ push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr
 - [x] Pre-render the landing page to static HTML at build time (SEO + link previews)
 - [x] Open Graph image, favicon, meta tags (set `SITE_URL` once there is a domain, for absolute preview URLs)
 
-### 3. Donations (no backend code)
+### 3. Tips (no backend code)
 - [x] Ko-fi (ko-fi.com/mamooji): 0% on one-off tips with Contributor off, only card/PayPal processing fees
 - [x] Small button in the header
 - [x] Friendly prompt right after PDF export
 
 ### 4. Legal and analytics
-- [ ] Privacy policy (photos are processed and not kept; the server is EU-hosted, so GDPR applies)
+- [ ] Privacy policy (photos are processed and deleted 6 h after last use; check which country the server is in, and plan for GDPR since EU visitors will use it either way)
 - [ ] Terms of use
 - [ ] Privacy-friendly analytics without cookies (Plausible, or self-hosted Umami), so no cookie banner is needed
 
 ### 5. Infrastructure
 - [x] VPS setup: non-root `deploy` user, SSH keys only, `ufw` (22/80/443), Docker + compose plugin, swap file, `unattended-upgrades`
 - [x] `Dockerfile` + `docker-compose.yml` + `Caddyfile`
-- [ ] GitHub Actions workflow: test → build → push to GHCR → deploy over SSH
+- [x] GitHub Actions workflow: test → build → push to GHCR → deploy over SSH (`.github/workflows/deploy.yml`)
 - [ ] DNS A record → VPS, proxied through Cloudflare
 - [x] Docker log rotation
 - [x] Docker healthcheck using `/api/health`
