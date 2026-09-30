@@ -6,16 +6,16 @@ Goal: launch the app publicly as fast as possible, cheaply, and able to handle m
 
 Live at **https://trace3dpen.com** (Cloudflare in front, Let's Encrypt certificates from Caddy): landing page at `/`, tool at `/app/`, Ko-fi tips. Every push to `main` deploys automatically. Phase 1 §1–4 and most of §5 are done; next up is the uptime monitor, then launch posts.
 
-**Waiting on:**
-- **Stripe review of the Ko-fi account.** Stripe flagged the new, empty Ko-fi page. We added content and "tip" wording and submitted their form. Until it's approved, card payments may be paused; PayPal still works. Never say "donate" or "donations" in public copy: Stripe only allows that for registered charities.
+**Ko-fi:** Stripe approved the account, so card tips work. The page's website link points to https://trace3dpen.com. Never say "donate" or "donations" in public copy: Stripe only allows that for registered charities.
 
 **§4 legal and analytics: done.** Privacy policy at `/privacy/`, terms at `/terms/`, Umami counting visits and the `upload`, `pdf-download`, and `kofi` events. Dashboard: `ssh -L 3000:localhost:3000 skeleton`, then http://localhost:3000. Keep the privacy policy in sync with what the code and Cloudflare actually do.
 
-**Domain `trace3dpen.com`** (bought at Squarespace, DNS on Cloudflare's free plan) is live. Caddy trusts Cloudflare's IP ranges and passes the real visitor IP to the app and Umami, `www` redirects to the bare domain, and the server's IP no longer serves the site. `SITE_ADDRESS=trace3dpen.com www.trace3dpen.com` is in the server's `.env`. Left to do:
-- Cloudflare SSL/TLS mode: **Full (strict)**.
-- Leave Scrape Shield's **Email Address Obfuscation** off (it rewrites the contact email and breaks React hydration), and don't turn on Web Analytics' automatic setup, Rocket Loader, or Bot Fight Mode (they'd add scripts or cookies the privacy policy doesn't mention).
-- Point the Ko-fi page's website link at https://trace3dpen.com.
-- Later: restrict the Hetzner firewall's ports 80/443 to Cloudflare's IP ranges, so the server can't be reached around Cloudflare.
+**Domain `trace3dpen.com`** (bought at Squarespace, DNS on Cloudflare's free plan) is live, with Cloudflare SSL/TLS on **Full (strict)**. Caddy trusts Cloudflare's IP ranges and passes the real visitor IP to the app and Umami, `www` redirects to the bare domain, and the server's IP no longer serves the site. `SITE_ADDRESS=trace3dpen.com www.trace3dpen.com` is in the server's `.env`. Keep in Cloudflare: Scrape Shield's **Email Address Obfuscation** off (it rewrites the contact email and breaks React hydration), and Web Analytics' automatic setup, Rocket Loader, and Bot Fight Mode off (they'd add scripts or cookies the privacy policy doesn't mention).
+
+**Next up:**
+1. **Uptime monitor** (UptimeRobot or BetterStack, free plan) on `https://trace3dpen.com/api/health`, alerting by email. About 5 minutes.
+2. **Launch posts:** r/3Dpen, 3D-pen Facebook groups, and short TikToks/Shorts showing photo → template → build.
+3. Later: restrict the Hetzner firewall's ports 80/443 to Cloudflare's IP ranges, so the server can't be reached around Cloudflare.
 
 **Other loose ends:** the gallery needs photos of real builds.
 
