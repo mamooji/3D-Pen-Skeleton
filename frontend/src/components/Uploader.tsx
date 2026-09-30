@@ -3,6 +3,7 @@ import { ImageUp, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PRIVACY_PATH, TERMS_PATH } from "@/site";
 
 interface Props {
   onFile: (file: File) => void;
@@ -85,6 +86,16 @@ export default function Uploader({ onFile, busy, cutout }: Props) {
             </Button>
           </div>
         </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Photos are deleted automatically 6 hours after last use.{" "}
+          <a href={PRIVACY_PATH} className="underline underline-offset-4 hover:text-foreground">
+            Privacy
+          </a>{" "}
+          ·{" "}
+          <a href={TERMS_PATH} className="underline underline-offset-4 hover:text-foreground">
+            Terms
+          </a>
+        </p>
       </CardContent>
     </Card>
   );

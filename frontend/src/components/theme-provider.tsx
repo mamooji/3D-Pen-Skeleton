@@ -8,7 +8,7 @@ interface ThemeState {
   setTheme: (t: Theme) => void;
 }
 
-// Keep in sync with the inline script in index.html that applies the theme before first paint.
+// Keep in sync with THEME_SCRIPT in vite.config.ts, which applies the theme before first paint.
 const STORAGE_KEY = "skeleton3d-theme";
 const DARK_QUERY = "(prefers-color-scheme: dark)";
 

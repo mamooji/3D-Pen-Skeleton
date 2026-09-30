@@ -4,5 +4,6 @@ import "../index.css";
 
 const root = document.getElementById("root")!;
 // The production build pre-renders the page; the dev server doesn't.
-if (root.hasChildNodes()) hydrateRoot(root, <LandingRoot />);
-else createRoot(root).render(<LandingRoot />);
+const page = <LandingRoot path={location.pathname} />;
+if (root.hasChildNodes()) hydrateRoot(root, page);
+else createRoot(root).render(page);

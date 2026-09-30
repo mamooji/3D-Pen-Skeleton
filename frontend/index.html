@@ -3,19 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Landing page. The site-head plugin (vite.config.ts) fills in the head marker below; scripts/prerender.mjs fills in #root at build time. -->
+    <!-- Landing page. scripts/prerender.mjs fills in #root at build time. The site-head plugin (vite.config.ts) fills in the head marker below. -->
     <!--head-->
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <script>
-      // Apply the saved theme before first paint (see src/components/theme-provider.tsx; keep in sync across index.html and app/index.html).
-      try {
-        var t = localStorage.getItem("skeleton3d-theme") || "system";
-        var d = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
-        document.documentElement.classList.toggle("dark", d);
-        document.documentElement.style.colorScheme = d ? "dark" : "light";
-      } catch (e) {}
-    </script>
   </head>
   <body>
     <div id="root"></div>

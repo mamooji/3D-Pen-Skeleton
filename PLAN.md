@@ -9,13 +9,22 @@ Live on the server's IP (plain HTTP): landing page at `/`, tool at `/app/`, Ko-f
 **Waiting on:**
 - **Stripe review of the Ko-fi account.** Stripe flagged the new, empty Ko-fi page. We added content and "tip" wording and submitted their form. Until it's approved, card payments may be paused; PayPal still works. Never say "donate" or "donations" in public copy: Stripe only allows that for registered charities.
 
-**Next up (pick one):**
-- **§4 Legal and analytics:** privacy policy, terms, cookie-free analytics.
-- **Phase 0 domain + Cloudflare.** When the domain exists:
+**In progress: §4 legal and analytics** (code is written; the pages are at `/privacy/` and `/terms/`, and Umami is in `docker-compose.yml`). To finish:
+1. Fill in `contactEmail` in `frontend/src/site.ts` (a new address just for this site). The build fails while it's empty.
+2. **Before pushing**, add Umami's secrets to the server's `.env`. Compose refuses to start without them, so the deploy would fail:
+   `ssh skeleton 'cd /opt/skeleton3d && printf "UMAMI_DB_PASSWORD=%s\nUMAMI_APP_SECRET=%s\n" "$(openssl rand -hex 24)" "$(openssl rand -hex 32)" >> .env'`
+3. Push. The deploy starts Umami and its Postgres.
+4. Open the dashboard through an SSH tunnel (it's only on the server's localhost): `ssh -L 3000:localhost:3000 skeleton`, then http://localhost:3000. Log in as `admin` / `umami` and **change the password right away**.
+5. Add a website in Umami (name it after the site; the domain can be the IP for now and changed later). Copy its website ID into `umamiWebsiteId` in `frontend/src/site.ts` and push. The tracker only loads once that's set.
+6. Check that visits show up. Events tracked: `upload`, `pdf-download`, `kofi`.
+
+**Next up after that: Phase 0 domain + Cloudflare.** When the domain exists:
   - Add `SITE_ADDRESS=<domain>` to `/opt/skeleton3d/.env` on the server, so Caddy gets an HTTPS certificate.
   - Pass `SITE_URL=https://<domain>` to the Docker build as a build arg. The workflow doesn't pass it yet, and link previews need it for absolute image URLs.
   - Tell Caddy to trust Cloudflare's IP ranges (`trusted_proxies`). Otherwise every visitor shares one IP and one upload rate limit.
   - Point the Ko-fi page's website link at the domain.
+  - Add Cloudflare to the privacy policy (`frontend/src/landing/Legal.tsx`, "Where your data is processed"): it sees every visitor's IP address. Bump `UPDATED`.
+  - Change the website's domain in Umami.
 
 **Other loose ends:** the gallery needs photos of real builds.
 
@@ -53,7 +62,7 @@ push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr
 ```
 
 - Multi-stage `Dockerfile`: Node builds `frontend/dist`, Python slim runs uvicorn with **one worker**. The rembg model is downloaded during the build and ships in the image.
-- `docker-compose.yml`: `app` + `caddy` (automatic Let's Encrypt, no default upload size limit).
+- `docker-compose.yml`: `app` + `caddy` (automatic Let's Encrypt, no default upload size limit) + `umami` and `umami-db` (analytics; Caddy exposes only `/stats/script.js` and `/stats/api/send`, and the dashboard is on the server's `127.0.0.1:3000`).
 - GitHub Secrets: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` (a deploy-only key), `VPS_KNOWN_HOSTS` (the server's SSH host key).
 - Images are tagged `latest` + commit SHA. Each deploy pins its SHA as `APP_IMAGE` in `/opt/skeleton3d/.env` and only rewrites that line, so keep other settings (e.g. `SITE_ADDRESS`) in the same file. Roll back by setting `APP_IMAGE` to an earlier SHA and running `docker compose up -d`.
 - Processed uploads live in the `uploads` Docker volume and are deleted 6 h after last use.
@@ -95,9 +104,9 @@ push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr
 - [x] Friendly prompt right after PDF export
 
 ### 4. Legal and analytics
-- [ ] Privacy policy (photos are processed and deleted 6 h after last use; check which country the server is in, and plan for GDPR since EU visitors will use it either way)
-- [ ] Terms of use
-- [ ] Privacy-friendly analytics without cookies (Plausible, or self-hosted Umami), so no cookie banner is needed
+- [x] Privacy policy at `/privacy/` (server in Ashburn, US; covers GDPR basics). The app no longer writes access logs, so the policy can say IP addresses aren't logged. Keep the policy in sync with what the code actually stores.
+- [x] Terms of use at `/terms/`
+- [ ] Self-hosted Umami, no cookies, so no cookie banner is needed (code done; server setup steps are under "Where we left off")
 
 ### 5. Infrastructure
 - [x] VPS setup: non-root `deploy` user, SSH keys only, `ufw` (22/80/443), Docker + compose plugin, swap file, `unattended-upgrades`

@@ -8,6 +8,15 @@ export const SITE = {
     "Upload a photo of an object and get a free printable template of numbered ribs and rings. Trace them with your 3D pen and assemble a 3D frame.",
   // Ko-fi page (https://ko-fi.com/...). The Support buttons and post-download prompt stay hidden while this is empty.
   donateUrl: "https://ko-fi.com/mamooji",
+  // Who runs the site, how to reach them, and whose laws apply, for the privacy policy and terms.
+  // The build fails while any of these is empty (scripts/prerender.mjs).
+  operator: "Muhammad Mamooji",
+  contactEmail: "",
+  governingLaw: "Ontario, Canada",
+  // Umami website ID (from the Umami dashboard). The tracker is added to production builds only while this is set.
+  umamiWebsiteId: "",
 };
 
 export const APP_PATH = "/app/";
+export const PRIVACY_PATH = "/privacy/";
+export const TERMS_PATH = "/terms/";

@@ -11,7 +11,7 @@ export function SupportButton() {
   if (!SITE.donateUrl) return null;
   return (
     <Button asChild variant="outline" aria-label="Support this project on Ko-fi">
-      <a href={SITE.donateUrl} target="_blank" rel="noopener">
+      <a href={SITE.donateUrl} target="_blank" rel="noopener" data-umami-event="kofi">
         <Coffee />
         <span className="hidden sm:inline">Support</span>
       </a>
@@ -54,7 +54,7 @@ export function SupportPrompt({ onClose }: { onClose: () => void }) {
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Button asChild size="sm">
-            <a href={SITE.donateUrl} target="_blank" rel="noopener" onClick={close}>
+            <a href={SITE.donateUrl} target="_blank" rel="noopener" data-umami-event="kofi" onClick={close}>
               <Coffee /> Buy me a coffee
             </a>
           </Button>

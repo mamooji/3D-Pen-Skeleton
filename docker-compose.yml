@@ -26,7 +26,47 @@ services:
       - caddy_data:/data
       - caddy_config:/config
 
+  # Cookie-free visitor stats. Caddy exposes only the tracker (/stats/script.js, /stats/api/send); the dashboard is
+  # on the server's localhost, reached through an SSH tunnel (see PLAN.md). Secrets come from /opt/skeleton3d/.env.
+  umami:
+    image: ghcr.io/umami-software/umami:3.4.0
+    restart: unless-stopped
+    init: true
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:?set UMAMI_DB_PASSWORD in .env}@umami-db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:?set UMAMI_APP_SECRET in .env}
+      # Visitor IDs can't be linked across days (the privacy policy says so).
+      SALT_ROTATION: day
+      DISABLE_TELEMETRY: 1
+    ports:
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:3000/api/heartbeat || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  umami-db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:?set UMAMI_DB_PASSWORD in .env}
+    volumes:
+      - umami_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami -d umami"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   uploads:
+  umami_db:
   caddy_data:
   caddy_config:

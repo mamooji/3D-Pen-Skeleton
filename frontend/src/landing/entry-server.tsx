@@ -1,6 +1,10 @@
 import { renderToString } from "react-dom/server";
-import LandingRoot from "./Root";
+import { SITE } from "@/site";
+import LandingRoot, { PAGES } from "./Root";
 
-export function render(): string {
-  return renderToString(<LandingRoot />);
+export const paths = Object.keys(PAGES);
+export const site = SITE;
+
+export function render(path: string): string {
+  return renderToString(<LandingRoot path={path} />);
 }

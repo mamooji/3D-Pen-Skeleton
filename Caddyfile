@@ -8,4 +8,13 @@ request_body {
 	max_size 30MB
 }
 
-reverse_proxy app:8000
+# Umami's tracker script and collect endpoint only. Its dashboard and login stay off the internet.
+@stats path /stats/script.js /stats/api/send
+handle @stats {
+	uri strip_prefix /stats
+	reverse_proxy umami:3000
+}
+
+handle {
+	reverse_proxy app:8000
+}

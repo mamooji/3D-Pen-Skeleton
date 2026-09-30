@@ -7,6 +7,7 @@ import Controls from "./components/Controls";
 import TemplatePreview from "./components/TemplatePreview";
 import { ModeToggle } from "@/components/mode-toggle";
 import { SupportButton, SupportPrompt, supportPromptWanted } from "@/components/support";
+import { track } from "@/lib/analytics";
 import { SITE } from "@/site";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +45,7 @@ export default function App() {
       const r = await segment(shrunk);
       photo.current = shrunk;
       setImageId(r.image_id);
+      track("upload");
       setCutout(r.preview);
     } catch (e) {
       setError((e as Error).message);
@@ -95,6 +97,7 @@ export default function App() {
       a.download = "skeleton-template.pdf";
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      track("pdf-download");
       if (supportPromptWanted()) setThanks(true);
     } catch (e) {
       setError((e as Error).message);
