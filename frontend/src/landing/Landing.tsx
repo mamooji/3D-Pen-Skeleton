@@ -205,7 +205,7 @@ export default function Landing() {
         <Section id="faq" title="Questions">
           <Card className="mx-auto max-w-3xl py-2">
             <CardContent>
-              <Accordion type="single" collapsible>
+              <Accordion type="multiple">
                 {FAQ.map(({ q, a }) => (
                   <AccordionItem key={q} value={q}>
                     <AccordionTrigger className="text-base">{q}</AccordionTrigger>
