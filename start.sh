@@ -1,3 +1,4 @@
+#comment from my mac
 #!/usr/bin/env bash
 # Build the frontend (if needed) and serve the whole app at http://127.0.0.1:8000
 set -euo pipefail
