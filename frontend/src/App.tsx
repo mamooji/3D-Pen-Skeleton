@@ -94,7 +94,7 @@ export default function App() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "skeleton-template.pdf";
+      a.download = "trace3dpen-template.pdf";
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 10_000);
       track("pdf-download");

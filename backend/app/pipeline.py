@@ -219,7 +219,7 @@ def build_template(prep: Prepared, params: dict) -> Template:
     sc.label(0, 8, "50 mm — check this with a ruler", 3.0, "#555555", "start")
     pieces.append(sc)
 
-    title = f"3D pen skeleton · {P['size_cm']:g} cm · detail {P['detail']}"
+    title = f"Trace 3D Pen · {P['size_cm']:g} cm · detail {P['detail']}"
     pages, oversize = pack(pieces, P["paper"], title)
 
     warnings = []

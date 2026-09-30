@@ -1,4 +1,4 @@
-# 3D Pen Skeleton
+# Trace 3D Pen
 
 Upload a photo, get a printable template for a 3D-pen frame of the main object:
 

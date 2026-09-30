@@ -1,9 +1,9 @@
 // Product name and copy, shared by the landing page, the tool, each page's <head> (vite.config.ts), and the
 // link-preview image (backend/scripts/landing_assets.py: rerun it after changing name or headline).
 export const SITE = {
-  name: "3D Pen Skeleton",
+  name: "Trace 3D Pen",
   headline: "Turn any photo into a 3D-pen template",
-  title: "3D Pen Skeleton: turn any photo into a 3D-pen template",
+  title: "Trace 3D Pen: turn any photo into a 3D-pen template",
   description:
     "Upload a photo of an object and get a free printable template of numbered ribs and rings. Trace them with your 3D pen and assemble a 3D frame.",
   // Ko-fi page (https://ko-fi.com/...). The Support buttons and post-download prompt stay hidden while this is empty.

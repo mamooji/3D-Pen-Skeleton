@@ -27,7 +27,7 @@ SEGMENT_CONCURRENCY = int(os.environ.get("SEGMENT_CONCURRENCY", "1"))
 # ...and at most this many (running + waiting) before new ones are turned away.
 MAX_QUEUED = int(os.environ.get("SEGMENT_MAX_QUEUED", "20"))
 
-app = FastAPI(title="3D Pen Skeleton")
+app = FastAPI(title="Trace 3D Pen")
 cache = PreparedCache(Path(os.environ.get("CACHE_DIR") or Path(tempfile.gettempdir()) / "skeleton3d-cache"))
 upload_limit = RateLimiter((10, 60), (60, 3600))
 build_limit = RateLimiter((240, 60))
@@ -135,7 +135,7 @@ async def export(req: TemplateRequest, request: Request):
     return Response(
         pdf,
         media_type="application/pdf",
-        headers={"Content-Disposition": 'attachment; filename="skeleton-template.pdf"'},
+        headers={"Content-Disposition": 'attachment; filename="trace3dpen-template.pdf"'},
     )
 
 

@@ -81,7 +81,7 @@ def page_svg(page: Page) -> str:
 def pages_pdf(pages: list[Page]) -> bytes:
     buf = io.BytesIO()
     c = canvas.Canvas(buf)
-    c.setTitle("3D pen skeleton template")
+    c.setTitle("Trace 3D Pen template")
     for page in pages:
         c.setPageSize((page.w * MM, page.h * MM))
         c.setLineJoin(1)

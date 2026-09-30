@@ -64,7 +64,7 @@ push to main ─► GitHub Actions: tests ─► build image ─► push to ghcr
 ## Phase 0: Decisions (now)
 
 - [x] Buy a domain: `trace3dpen.com` (Squarespace)
-- [ ] Pick the product name and branding ("3D Pen Skeleton" is fine as a repo name; a catchier name helps the landing page and social posts)
+- [x] Pick the product name: **Trace 3D Pen**, to match the domain (the repo, server paths, and image name still say "skeleton")
 - [x] Create the Hetzner account and a server (went with 3 vCPU / 4 GB; see Hosting)
 - [x] Create a Cloudflare account and move the domain's DNS there
 

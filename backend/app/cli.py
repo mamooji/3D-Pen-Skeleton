@@ -9,7 +9,7 @@ from .render import page_svg, pages_pdf
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Photo -> 3D pen skeleton template")
+    ap = argparse.ArgumentParser(description="Photo -> Trace 3D Pen template")
     ap.add_argument("image")
     ap.add_argument("-o", "--out", default="template.pdf")
     ap.add_argument("--detail", type=int, default=3, choices=range(1, 6))
