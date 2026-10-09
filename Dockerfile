@@ -1,6 +1,8 @@
 # Build the frontend, then serve it and the API from one Python image.
+# Base images come from AWS's mirror of Docker Hub's official images (the same images): CI pulls from
+# Docker Hub anonymously and kept hitting its rate limit (429 Too Many Requests).
 
-FROM node:24-slim AS frontend
+FROM public.ecr.aws/docker/library/node:24-slim AS frontend
 WORKDIR /src/frontend
 # The site's public URL (e.g. https://example.com), for absolute link-preview URLs. Optional.
 ARG SITE_URL=""
@@ -11,7 +13,7 @@ COPY frontend/ ./
 RUN npm run build
 
 
-FROM python:3.12-slim
+FROM public.ecr.aws/docker/library/python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
