@@ -4,3 +4,7 @@ __pycache__/
 frontend/node_modules/
 frontend/dist/
 frontend/dist-ssr/
+
+# TLS certificates and keys live on the server only
+certs/
+*.key

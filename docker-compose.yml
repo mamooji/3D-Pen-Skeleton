@@ -20,10 +20,12 @@ services:
       - "443:443"
       - "443:443/udp"
     environment:
-      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+      SITE_ADDRESS: ${SITE_ADDRESS:?set SITE_ADDRESS in .env}
     volumes:
       # The folder, not the file: deploys replace the file, and a single-file mount would keep showing the old one.
       - ./caddy:/etc/caddy:ro
+      # Cloudflare Origin CA certificate and key. They stay on the server, never in the repo.
+      - ./certs:/certs:ro
       - caddy_data:/data
       - caddy_config:/config
 

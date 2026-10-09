@@ -2,9 +2,9 @@
 
 Goal: launch the app publicly as fast as possible, cheaply, and able to handle many users at once. Accounts and paid tiers come after launch.
 
-## Where we left off (2026-09-30)
+## Where we left off (2026-10-09)
 
-Live at **https://trace3dpen.com** (Cloudflare in front, Let's Encrypt certificates from Caddy): landing page at `/`, tool at `/app/`, Ko-fi tips. Every push to `main` deploys automatically. The product is named **Trace 3D Pen** to match the domain. Phase 1 §1–5 are done; next up is building a few models to photograph, then launch posts.
+Live at **https://trace3dpen.com** (Cloudflare in front, a Cloudflare Origin CA certificate on Caddy): landing page at `/`, tool at `/app/`, Ko-fi tips. Every push to `main` deploys automatically. The product is named **Trace 3D Pen** to match the domain. Phase 1 §1–5 are done; next up is building a few models to photograph, then launch posts.
 
 **Uptime monitor:** UptimeRobot (free plan) runs a keyword check on `https://trace3dpen.com/api/health` for `"ok":true` every 5 minutes and emails on failure.
 
@@ -14,7 +14,9 @@ Live at **https://trace3dpen.com** (Cloudflare in front, Let's Encrypt certifica
 
 **§4 legal and analytics: done.** Privacy policy at `/privacy/`, terms at `/terms/`, Umami counting visits and the `upload`, `pdf-download`, and `kofi` events. Dashboard: `ssh -L 3000:localhost:3000 skeleton`, then http://localhost:3000. Keep the privacy policy in sync with what the code and Cloudflare actually do.
 
-**Domain `trace3dpen.com`** (bought at Squarespace, DNS on Cloudflare's free plan) is live, with Cloudflare SSL/TLS on **Full (strict)**. Caddy trusts Cloudflare's IP ranges and passes the real visitor IP to the app and Umami, `www` redirects to the bare domain, and the server's IP no longer serves the site. `SITE_ADDRESS=trace3dpen.com www.trace3dpen.com` is in the server's `.env`. Keep in Cloudflare: Scrape Shield's **Email Address Obfuscation** off (it rewrites the contact email and breaks React hydration), and Web Analytics' automatic setup, Rocket Loader, and Bot Fight Mode off (they'd add scripts or cookies the privacy policy doesn't mention).
+**Domain `trace3dpen.com`** (bought at Squarespace, DNS on Cloudflare's free plan) is live, with Cloudflare SSL/TLS on **Full (strict)**. Caddy trusts Cloudflare's IP ranges and passes the real visitor IP to the app and Umami, `www` redirects to the bare domain, and the server's IP no longer serves the site. `SITE_ADDRESS=trace3dpen.com www.trace3dpen.com` is in the server's `.env`.
+
+**Origin certificate:** Caddy serves a Cloudflare Origin CA certificate for `trace3dpen.com` and `*.trace3dpen.com`, valid until **2041-10-05**. Only Cloudflare trusts it, so it works only with the proxy on and Full (strict). It's in `/opt/skeleton3d/certs/` (`origin.pem`, `origin.key`) on the server only, never in the repo. It replaced Let's Encrypt, whose renewals would have had to reach the server through Cloudflare, which gets risky once the firewall only allows Cloudflare. To replace it: Cloudflare → SSL/TLS → Origin Server → Create Certificate, copy both files over the old ones, then `docker compose restart caddy`. Keep in Cloudflare: Scrape Shield's **Email Address Obfuscation** off (it rewrites the contact email and breaks React hydration), and Web Analytics' automatic setup, Rocket Loader, and Bot Fight Mode off (they'd add scripts or cookies the privacy policy doesn't mention).
 
 **Next up:**
 1. **Build a few models** (in progress) and photograph them: these feed both the launch posts and the landing page gallery (add them to `GALLERY` in `frontend/src/landing/Landing.tsx`; photos go in `frontend/public/landing/gallery/`).
@@ -55,7 +57,7 @@ push to main ─► GitHub Actions: tests + format check ─► build image ─�
 ```
 
 - Multi-stage `Dockerfile`: Node builds `frontend/dist`, Python slim runs uvicorn with **one worker**. The rembg model is downloaded during the build and ships in the image.
-- `docker-compose.yml`: `app` + `caddy` (automatic Let's Encrypt, no default upload size limit) + `umami` and `umami-db` (analytics; Caddy exposes only `/stats/script.js` and `/stats/api/send`, and the dashboard is on the server's `127.0.0.1:3000`).
+- `docker-compose.yml`: `app` + `caddy` (Cloudflare Origin CA certificate mounted from `/opt/skeleton3d/certs/`, no default upload size limit) + `umami` and `umami-db` (analytics; Caddy exposes only `/stats/script.js` and `/stats/api/send`, and the dashboard is on the server's `127.0.0.1:3000`).
 - GitHub Secrets: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` (a deploy-only key), `VPS_KNOWN_HOSTS` (the server's SSH host key).
 - Images are tagged `latest` + commit SHA. Each deploy pins its SHA as `APP_IMAGE` in `/opt/skeleton3d/.env` and only rewrites that line, so keep other settings (e.g. `SITE_ADDRESS`) in the same file. Roll back by setting `APP_IMAGE` to an earlier SHA and running `docker compose up -d`.
 - Processed uploads live in the `uploads` Docker volume and are deleted 6 h after last use.

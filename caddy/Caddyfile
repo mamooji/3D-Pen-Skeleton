@@ -8,9 +8,14 @@
 	}
 }
 
-# SITE_ADDRESS (in /opt/skeleton3d/.env) is "trace3dpen.com, www.trace3dpen.com". Caddy gets HTTPS certificates for
-# both automatically. Without it, the site is plain HTTP on the server's IP (":80").
+# SITE_ADDRESS (in /opt/skeleton3d/.env) is "trace3dpen.com www.trace3dpen.com".
 {$SITE_ADDRESS} {
+	# Cloudflare Origin CA certificate for trace3dpen.com and *.trace3dpen.com, valid until 2041-10-05. Only
+	# Cloudflare trusts it, which is all the origin needs (SSL/TLS mode Full (strict)). It replaces Let's Encrypt,
+	# whose renewals would have to reach the server through Cloudflare. The files live on the server only, in
+	# /opt/skeleton3d/certs/ (see PLAN.md).
+	tls /certs/origin.pem /certs/origin.key
+
 	encode zstd gzip
 
 	request_body {
