@@ -5,3 +5,4 @@
 **/.pytest_cache
 frontend/dist
 *.pdf
+frontend/public/models

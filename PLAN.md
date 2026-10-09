@@ -18,6 +18,8 @@ Live at **https://trace3dpen.com** (Cloudflare in front, a Cloudflare Origin CA 
 
 **Origin certificate:** Caddy serves a Cloudflare Origin CA certificate for `trace3dpen.com` and `*.trace3dpen.com`, valid until **2041-10-05**. Only Cloudflare trusts it, so it works only with the proxy on and Full (strict). It's in `/opt/skeleton3d/certs/` (`origin.pem`, `origin.key`) on the server only, never in the repo. It replaced Let's Encrypt, whose renewals would have had to reach the server through Cloudflare, which gets risky once the firewall only allows Cloudflare. To replace it: Cloudflare → SSL/TLS → Origin Server → Create Certificate, copy both files over the old ones, then `docker compose restart caddy`. Keep in Cloudflare: Scrape Shield's **Email Address Obfuscation** off (it rewrites the contact email and breaks React hydration), and Web Analytics' automatic setup, Rocket Loader, and Bot Fight Mode off (they'd add scripts or cookies the privacy policy doesn't mention).
 
+**Phase 2 (background removal in the browser):** built and tested locally on 2026-10-09; see the Phase 2 checklist for what's left (deploy, Cloudflare Cache Rule, phone testing, then downsizing).
+
 **Next up:**
 1. **Build a few models** (in progress) and photograph them: these feed both the launch posts and the landing page gallery (add them to `GALLERY` in `frontend/src/landing/Landing.tsx`; photos go in `frontend/public/landing/gallery/`).
 2. **Launch posts:** r/3Dpen, 3D-pen Facebook groups, and short TikToks/Shorts showing photo → template → build. Claude can draft the Reddit post and a video script. On hold until there are photos.
@@ -114,16 +116,20 @@ push to main ─► GitHub Actions: tests + format check ─► build image ─�
 ### Launch
 - [ ] Post in r/3Dpen, 3D-pen Facebook groups, and short TikToks/Shorts showing photo → template → build
 
-## Phase 2: Background removal in the browser (soon after launch)
+## Phase 2: Background removal in the browser
 
 This removes ~90% of server load and lets the VPS shrink to ~€4–5/mo.
 
-- [ ] Run background removal on the user's device with onnxruntime-web (WebGPU, WASM fallback)
-- [ ] Upload the resulting transparent PNG. The backend already skips rembg for transparent PNGs.
-- [ ] Keep server-side rembg as a fallback for devices that can't run the model
-- [ ] Look for a smaller model than the current ~180 MB one that's still good enough. It's downloaded once per visitor, then cached.
-- [ ] **License check:** use `isnet-general-use` (the current model) or another permissively licensed model. Avoid `@imgly/background-removal` (AGPL) and BRIA RMBG (no commercial use).
-- [ ] Downsize the VPS
+- [x] Run background removal on the user's device: onnxruntime-web 1.30 on **WebGPU** in a Web Worker (`frontend/src/lib/cutout.ts`, `cutout.worker.ts`), copying rembg's pre/post-processing exactly. ~250 ms per photo on an M1 Pro (server: 2–3 s).
+- [x] **No WASM fallback** (decided 2026-10-09): on phones a 1024² ISNet on the CPU would take tens of seconds and ~1 GB, and fp16 runs poorly there. Browsers without WebGPU or `shader-f16`, with Data Saver on, or hitting any error or a 20 s timeout use the server instead.
+- [x] Upload the photo **plus a separate grayscale mask** (the model's raw 1024×1024 output), not a transparent PNG: browsers blacken fully transparent pixels, which would spoil the preview's faded background. `/api/segment` takes an optional `mask`, stretches and thresholds it like rembg, skips the queue (still rate limited), and includes it in the cache key.
+- [x] Keep server-side rembg as the fallback (unchanged)
+- [x] Model: `isnet-general-use` (Apache-2.0) converted to **fp16 (90 MB)** with its 11 training-only outputs removed. Same masks as fp32 on 16 test photos. int8 (46 MB), silueta (44 MB), and u2netp (4.6 MB) were all clearly worse. Made by `backend/scripts/browser_model.py`, in its own Docker build stage, served at `/models/isnet-general-use-fp16-v1.onnx` (bump the version in the name and in `cutout.ts` if it changes). Browsers keep it in Cache Storage, saved only after it loads and runs.
+- [x] Parity in Chrome (Apple GPU): 15/16 test photos give the same template as the server (sizes within 1 mm). The odd one out is a row of overlapping shoes, which neither path cuts out usefully.
+- [x] The `upload` event in Umami now has `cutout` (`browser`/`server`) and `reason`. Privacy policy updated.
+- [ ] Deploy, then add the **Cloudflare Cache Rule** for `/models/*` and `*.wasm` (Cloudflare doesn't cache those extensions by default; Caddy already sends `immutable` cache headers for `/assets/*` and `/models/*`)
+- [ ] Test on real phones (iPhone Safari 26, Android Chrome) and check the browser/server split in Umami
+- [ ] Downsize the VPS once most uploads are cut out in the browser
 
 ## Phase 3: Accounts (once there's real usage)
 

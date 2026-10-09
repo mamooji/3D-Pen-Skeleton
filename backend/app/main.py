@@ -68,40 +68,56 @@ def health():
     return {"ok": True}
 
 
-def _prepare_and_store(image_id: str, data: bytes) -> Prepared:
-    prep = prepare(data)
+def _prepare_and_store(image_id: str, data: bytes, mask_data: bytes | None) -> Prepared:
+    prep = prepare(data, mask_data)
     cache.put(image_id, prep)
     return prep
 
 
-@app.post("/api/segment")
-async def segment(file: UploadFile, request: Request):
+async def _prepare(image_id: str, data: bytes, mask_data: bytes | None) -> Prepared:
+    try:
+        return await run_in_threadpool(_prepare_and_store, image_id, data, mask_data)
+    except UnidentifiedImageError:
+        raise HTTPException(400, "That file isn't an image we can read. Try a JPG or PNG.")
+    except ValueError as e:
+        raise HTTPException(422, f"{e} Try a photo with one clear object on a plain background.")
+
+
+async def _prepare_queued(image_id: str, data: bytes, request: Request) -> Prepared:
+    """Background removal on the server: one at a time, with a bounded queue."""
     global _queued
+    if _queued >= MAX_QUEUED:
+        raise HTTPException(503, "Lots of people are using this right now. Please try again in a minute.")
+    _queued += 1
+    try:
+        async with _segment_slots:
+            if await request.is_disconnected():
+                raise HTTPException(499, "Client left while waiting.")
+            # The same photo may have finished while this one waited.
+            return cache.get(image_id) or await _prepare(image_id, data, None)
+    finally:
+        _queued -= 1
+
+
+@app.post("/api/segment")
+async def segment(file: UploadFile, request: Request, mask: UploadFile | None = None):
+    """`mask`: the cut-out, made in the browser. Without one, background removal runs here."""
     data = await file.read()
-    if len(data) > MAX_UPLOAD:
+    mask_data = await mask.read() if mask is not None else None
+    if len(data) > MAX_UPLOAD or len(mask_data or b"") > MAX_UPLOAD:
         raise HTTPException(413, "That photo is too large (max 25 MB).")
-    image_id = hashlib.sha1(data).hexdigest()
+    h = hashlib.sha1(data)
+    if mask_data is not None:
+        h.update(b"\0mask\0" + mask_data)
+    image_id = h.hexdigest()
     prep = cache.get(image_id)
     if prep is None:
         if not upload_limit.allow(_client(request)):
             raise HTTPException(429, "You've uploaded a lot of photos in a short time. Please wait a minute and try again.")
-        if _queued >= MAX_QUEUED:
-            raise HTTPException(503, "Lots of people are using this right now. Please try again in a minute.")
-        _queued += 1
-        try:
-            async with _segment_slots:
-                if await request.is_disconnected():
-                    raise HTTPException(499, "Client left while waiting.")
-                prep = cache.get(image_id)  # the same photo may have finished while this one waited
-                if prep is None:
-                    try:
-                        prep = await run_in_threadpool(_prepare_and_store, image_id, data)
-                    except UnidentifiedImageError:
-                        raise HTTPException(400, "That file isn't an image we can read. Try a JPG or PNG.")
-                    except ValueError as e:
-                        raise HTTPException(422, f"{e} Try a photo with one clear object on a plain background.")
-        finally:
-            _queued -= 1
+        if mask_data is None:
+            prep = await _prepare_queued(image_id, data, request)
+        else:
+            prep = await _prepare(image_id, data, mask_data)
     png = base64.b64encode(preview_png(prep)).decode()
     return {"image_id": image_id, "preview": f"data:image/png;base64,{png}"}
 

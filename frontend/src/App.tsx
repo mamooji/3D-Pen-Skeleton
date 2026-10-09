@@ -17,6 +17,7 @@ import {
   type Params,
   type TemplateResult,
 } from "./api";
+import { cutOut, startCutoutModel } from "./lib/cutout";
 import { shrinkPhoto } from "./lib/image";
 import Uploader from "./components/Uploader";
 import Controls from "./components/Controls";
@@ -51,12 +52,17 @@ export default function App() {
   const [params, setParams] = useState<Params>(DEFAULT_PARAMS);
   const [result, setResult] = useState<TemplateResult | null>(null);
   const [segmenting, setSegmenting] = useState(false);
+  // The photo is waiting for background removal to finish loading in the browser.
+  const [gettingReady, setGettingReady] = useState(false);
   const [building, setBuilding] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [thanks, setThanks] = useState(false);
-  // The uploaded photo, so it can be sent again if the server has forgotten it.
-  const photo = useRef<Blob | null>(null);
+  // The uploaded photo and its cut-out, so they can be sent again if the server has forgotten them.
+  const uploaded = useRef<{ photo: Blob; mask: Blob | null } | null>(null);
+
+  // Get background removal ready in the browser while the user picks a photo.
+  useEffect(startCutoutModel, []);
 
   async function onFile(file: File) {
     // Some systems give photos (e.g. HEIC) no type at all; let the server decide those.
@@ -68,15 +74,18 @@ export default function App() {
     setSegmenting(true);
     try {
       const shrunk = await shrinkPhoto(file);
-      const r = await segment(shrunk);
-      photo.current = shrunk;
+      const cut = await cutOut(shrunk, () => setGettingReady(true));
+      setGettingReady(false);
+      const r = await segment(shrunk, cut.mask);
+      uploaded.current = { photo: shrunk, mask: cut.mask };
       setImageId(r.image_id);
-      track("upload");
+      track("upload", { cutout: cut.where, reason: cut.reason });
       setCutout(r.preview);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setSegmenting(false);
+      setGettingReady(false);
     }
   }
 
@@ -88,9 +97,9 @@ export default function App() {
     try {
       return await fn(id);
     } catch (e) {
-      if (!(e instanceof ApiError && e.status === 404 && photo.current))
+      if (!(e instanceof ApiError && e.status === 404 && uploaded.current))
         throw e;
-      const r = await segment(photo.current);
+      const r = await segment(uploaded.current.photo, uploaded.current.mask);
       return fn(r.image_id);
     }
   }
@@ -225,7 +234,7 @@ export default function App() {
           ))}
 
           {!imageId && !segmenting && <HowItWorks />}
-          {segmenting && <Processing />}
+          {segmenting && <Processing gettingReady={gettingReady} />}
 
           {result && (
             <Tabs defaultValue="pages" className="gap-4">
@@ -308,21 +317,26 @@ function HowItWorks() {
   );
 }
 
-function Processing() {
+function Processing({ gettingReady }: { gettingReady: boolean }) {
   // A normal upload takes a few seconds; longer than that means it's waiting behind other people's.
+  // The clock starts once the photo is no longer waiting for background removal to load in the browser.
   const [slow, setSlow] = useState(false);
   useEffect(() => {
+    setSlow(false);
+    if (gettingReady) return;
     const timer = setTimeout(() => setSlow(true), 6000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [gettingReady]);
 
   return (
     <div className="flex flex-col gap-4">
       <p className="flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="size-4 animate-spin" />
-        {slow
-          ? "Lots of people are using this right now. You're in line, and it'll start in a moment…"
-          : "Finding the object… this usually takes a few seconds."}
+        {gettingReady
+          ? "Getting ready to find the object (first time only)…"
+          : slow
+            ? "Lots of people are using this right now. You're in line, and it'll start in a moment…"
+            : "Finding the object… this usually takes a few seconds."}
       </p>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5">
         {[0, 1, 2].map((i) => (

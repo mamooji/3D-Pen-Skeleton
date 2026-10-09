@@ -3,7 +3,7 @@ import { APP_PATH, PRIVACY_PATH, SITE, TERMS_PATH } from "@/site";
 import { Layout } from "./Layout";
 
 // Change this whenever either page's substance changes.
-const UPDATED = "September 30, 2026";
+const UPDATED = "October 9, 2026";
 
 function LegalPage({
   title,
@@ -61,8 +61,10 @@ export function Privacy() {
       <H2>Your photos</H2>
       <p>
         Your browser shrinks the photo to at most 1600 pixels on its longest
-        side, then sends it to our server. The server cuts out the object and
-        builds the shape your template is made from.
+        side. If your browser can run it, it also cuts out the object itself;
+        otherwise our server does that step. Then the photo (and the cut-out, if
+        your browser made it) goes to our server, which builds the shape your
+        template is made from.
       </p>
       <ul>
         <li>
@@ -73,6 +75,12 @@ export function Privacy() {
         <li>
           Your PDF is made on the server and sent straight to you. We don't keep
           a copy.
+        </li>
+        <li>
+          To cut out objects, your browser downloads a model (about 90 MB) from
+          this site the first time you open the app, and keeps it so it doesn't
+          need to download it again. It's only a program file, not data about
+          you. Clearing this site's data in your browser removes it.
         </li>
         <li>
           We don't look at your photos, share them, sell them, or use them to
@@ -104,7 +112,8 @@ export function Privacy() {
           your IP address
         </li>
         <li>
-          a few actions: uploading a photo, downloading a PDF, and clicking a
+          a few actions: uploading a photo (and whether the cut-out was made in
+          your browser or on our server), downloading a PDF, and clicking a
           Ko-fi link
         </li>
       </ul>

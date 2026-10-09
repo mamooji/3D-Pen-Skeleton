@@ -86,11 +86,14 @@ async function request(input: string, init: RequestInit): Promise<Response> {
   }
 }
 
+/** mask: the cut-out made in the browser (see lib/cutout.ts). Without one, the server makes it. */
 export async function segment(
   photo: Blob,
+  mask: Blob | null = null,
 ): Promise<{ image_id: string; preview: string }> {
   const form = new FormData();
   form.append("file", photo, "photo");
+  if (mask) form.append("mask", mask, "mask.png");
   return (await request("/api/segment", { method: "POST", body: form })).json();
 }
 

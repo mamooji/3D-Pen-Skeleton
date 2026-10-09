@@ -13,7 +13,7 @@ from .features import feature_lines
 from .inflate import half_thickness, signed_fields
 from .layout import Piece, pack
 from .render import Page, Path
-from .segment import clean_mask, crop_to_work, extract_mask, load_image
+from .segment import clean_mask, crop_to_work, extract_mask, load_image, load_mask
 
 PALETTE = ["#1f1a17", "#00a651", "#ef4136", "#262262", "#8e44ad", "#0077b6", "#d35400", "#2e7d32"]
 RING_PALETTE = ["#e6007e", "#0097a7", "#f39c12", "#6d4c41"]
@@ -52,9 +52,11 @@ def prepare_mask(mask: np.ndarray, rgb: np.ndarray | None = None) -> Prepared:
     return Prepared(mask, rgb, sdf, signed)
 
 
-def prepare(data: bytes) -> Prepared:
+def prepare(data: bytes, mask_data: bytes | None = None) -> Prepared:
+    """mask_data: a mask made in the browser (see load_mask); without it, background removal runs here."""
     img = load_image(data)
-    mask = clean_mask(extract_mask(img))
+    raw = load_mask(mask_data, img.size) if mask_data is not None else extract_mask(img)
+    mask = clean_mask(raw)
     rgb = np.array(img.convert("RGB"))
     mask, rgb = crop_to_work(mask, rgb)
     return prepare_mask(clean_mask(mask), rgb)

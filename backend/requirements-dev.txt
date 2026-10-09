@@ -4,3 +4,6 @@ httpx2
 # scripts/landing_assets.py (reads the web font)
 fonttools
 brotli
+# scripts/browser_model.py (the in-browser background-removal model)
+onnx==1.19.1
+onnxconverter-common==1.16.0

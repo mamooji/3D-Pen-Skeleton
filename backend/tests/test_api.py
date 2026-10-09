@@ -13,6 +13,7 @@ from app import main
 from app.cache import PreparedCache
 from app.limits import RateLimiter
 from app.pipeline import prepare_mask
+from app.segment import MAX_MASK_SIDE
 
 
 def cutout_png(r=150, seed=0):
@@ -80,6 +81,61 @@ def test_upload_rate_limit_skips_repeat_uploads(client):
 def test_turns_uploads_away_when_queue_is_full(client, monkeypatch):
     monkeypatch.setattr(main, "_queued", main.MAX_QUEUED)
     assert upload(client, cutout_png()).status_code == 503
+
+
+def photo_jpeg():
+    """An opaque photo, which would need background removal without a mask."""
+    img = Image.new("RGB", (800, 600), (235, 235, 230))
+    ImageDraw.Draw(img).ellipse((250, 150, 550, 450), fill=(40, 90, 160))
+    buf = io.BytesIO()
+    img.save(buf, "JPEG")
+    return buf.getvalue()
+
+
+def mask_png(box=(320, 256, 704, 768), side=1024):
+    """The model's output as the browser sends it: square, whatever the photo's shape."""
+    img = Image.new("L", (side, side), 0)
+    if box:
+        ImageDraw.Draw(img).ellipse(box, fill=255)
+    buf = io.BytesIO()
+    img.save(buf, "PNG")
+    return buf.getvalue()
+
+
+def upload_with_mask(client, photo, mask):
+    files = {"file": ("photo", photo, "image/jpeg"), "mask": ("mask", mask, "image/png")}
+    return client.post("/api/segment", files=files)
+
+
+def test_browser_mask_skips_background_removal_and_queue(client, monkeypatch):
+    def no_rembg(img):
+        raise AssertionError("background removal ran on the server")
+
+    monkeypatch.setattr("app.segment._rembg_mask", no_rembg)
+    monkeypatch.setattr(main, "_queued", main.MAX_QUEUED)  # a full queue doesn't matter without rembg
+    r = upload_with_mask(client, photo_jpeg(), mask_png())
+    assert r.status_code == 200
+    prep = main.cache.get(r.json()["image_id"])
+    ys, xs = np.nonzero(prep.mask)
+    # The square mask is stretched to the 4:3 photo: the circle comes out as the photo's circle.
+    assert abs((xs.max() - xs.min()) / (ys.max() - ys.min()) - 1) < 0.05
+    assert client.post("/api/template", json={"image_id": r.json()["image_id"]}).status_code == 200
+
+
+def test_mask_is_part_of_the_image_id(client):
+    photo = photo_jpeg()
+    a = upload_with_mask(client, photo, mask_png()).json()["image_id"]
+    b = upload_with_mask(client, photo, mask_png(box=(300, 240, 724, 784))).json()["image_id"]
+    assert a != b
+    assert a == upload_with_mask(client, photo, mask_png()).json()["image_id"]
+
+
+def test_bad_masks(client):
+    photo = photo_jpeg()
+    assert upload_with_mask(client, photo, b"not a png").status_code == 400
+    assert upload_with_mask(client, photo, mask_png(side=MAX_MASK_SIDE + 1)).status_code == 422
+    r = upload_with_mask(client, photo, mask_png(box=None))
+    assert r.status_code == 422 and "No object" in r.json()["detail"]
 
 
 def test_cache_prunes_unused_entries(tmp_path):

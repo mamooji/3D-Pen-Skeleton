@@ -18,7 +18,15 @@ Trace every piece on paper with the 3D pen, peel them off, and stand the ribs up
 
 `start.cmd` runs `start.ps1` with a one-off execution-policy bypass. Windows blocks `.ps1` scripts by default, so `.\start.ps1` on its own fails.
 
-The first upload downloads the background-removal model (~180 MB, cached in `~\.rembg`).
+The first upload that the server cuts out downloads the background-removal model (~180 MB, cached in `~\.rembg`).
+
+To cut photos out in the browser too (WebGPU), make the browser's copy of the model once (~90 MB, git ignores it):
+
+```powershell
+cd backend; .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt; .\.venv\Scripts\python.exe scripts\browser_model.py
+```
+
+Without it, the app falls back to the server, as on browsers without WebGPU.
 
 Development (hot reload):
 
@@ -38,7 +46,7 @@ Tests (first time: `.\.venv\Scripts\python.exe -m pip install -r requirements-de
 
 ## How it works
 
-1. **Cut-out** (`segment.py`): rembg (`isnet-general-use`) removes the background. PNGs that are already transparent skip this step. The largest object is kept and small holes are filled.
+1. **Cut-out**: `isnet-general-use` removes the background, in the browser when it supports WebGPU (`frontend/src/lib/cutout.ts`, an fp16 copy of the model made by `backend/scripts/browser_model.py`), otherwise on the server with rembg (`segment.py`). Both give the same mask. PNGs that are already transparent skip this step. The largest object is kept and small holes are filled.
 2. **Inflate** (`inflate.py`): solves `lap(u) = -1` inside the outline and takes `h = sqrt(4u)`. A disk becomes an exact sphere and a strip becomes a round tube, so thin parts stay thin. The object is assumed mirror-symmetric front to back.
 3. **Slice** (`slicer.py`): each rib is the loop `|depth| < h(x, y)` at a fixed x. Rings are the same at a fixed y. Parts that split (legs, ears) give several loops.
 4. **Clean up** (`curves.py`): resample, smooth, and simplify each curve.

@@ -8,3 +8,6 @@ frontend/dist-ssr/
 # TLS certificates and keys live on the server only
 certs/
 *.key
+
+# Made by backend/scripts/browser_model.py; the Docker build makes its own
+frontend/public/models/

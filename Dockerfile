@@ -13,6 +13,14 @@ COPY frontend/ ./
 RUN npm run build
 
 
+# The background-removal model the browser runs (~90 MB): built here so it stays out of git and the runtime image
+# doesn't need the conversion tools. See backend/scripts/browser_model.py.
+FROM public.ecr.aws/docker/library/python:3.12-slim AS browser-model
+RUN pip install --no-cache-dir onnx==1.19.1 onnxconverter-common==1.16.0 onnxruntime==1.30.0
+COPY backend/scripts/browser_model.py /build/
+RUN python /build/browser_model.py --out /out/isnet-general-use-fp16-v1.onnx
+
+
 FROM public.ecr.aws/docker/library/python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -45,6 +53,7 @@ RUN python -c "from rembg import new_session; new_session('isnet-general-use')"
 COPY backend/app ./app
 # main.py serves ../../frontend/dist relative to itself.
 COPY --from=frontend /src/frontend/dist /srv/frontend/dist
+COPY --from=browser-model /out/ /srv/frontend/dist/models/
 
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \

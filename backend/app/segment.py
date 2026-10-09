@@ -12,6 +12,8 @@ from PIL import Image, ImageOps
 WORK_SIZE = 600
 # Longest side the photo is reduced to before background removal.
 INPUT_SIZE = 1024
+# Longest side accepted for a mask made in the browser (the model's output is 1024 x 1024).
+MAX_MASK_SIDE = 2048
 
 _session = None
 _session_lock = threading.Lock()
@@ -24,6 +26,18 @@ def load_image(data: bytes) -> Image.Image:
     if max(img.size) > INPUT_SIZE:
         img.thumbnail((INPUT_SIZE, INPUT_SIZE), Image.LANCZOS)
     return img
+
+
+def load_mask(data: bytes, size: tuple[int, int]) -> np.ndarray:
+    """A mask made in the browser: the model's grayscale output for the whole photo, at any size.
+
+    It's stretched to the photo's size and thresholded the way rembg treats its own output, so both paths agree.
+    """
+    m = Image.open(io.BytesIO(data))
+    if max(m.size) > MAX_MASK_SIDE:
+        raise ValueError("The cut-out mask is too large.")
+    m = m.convert("L").resize(size, Image.LANCZOS)
+    return np.array(m) >= 128
 
 
 def _alpha_mask(img: Image.Image) -> np.ndarray | None:
