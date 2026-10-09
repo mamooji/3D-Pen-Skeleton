@@ -18,7 +18,7 @@ Live at **https://trace3dpen.com** (Cloudflare in front, a Cloudflare Origin CA 
 
 **Origin certificate:** Caddy serves a Cloudflare Origin CA certificate for `trace3dpen.com` and `*.trace3dpen.com`, valid until **2041-10-05**. Only Cloudflare trusts it, so it works only with the proxy on and Full (strict). It's in `/opt/skeleton3d/certs/` (`origin.pem`, `origin.key`) on the server only, never in the repo. It replaced Let's Encrypt, whose renewals would have had to reach the server through Cloudflare, which gets risky once the firewall only allows Cloudflare. To replace it: Cloudflare → SSL/TLS → Origin Server → Create Certificate, copy both files over the old ones, then `docker compose restart caddy`. Keep in Cloudflare: Scrape Shield's **Email Address Obfuscation** off (it rewrites the contact email and breaks React hydration), and Web Analytics' automatic setup, Rocket Loader, and Bot Fight Mode off (they'd add scripts or cookies the privacy policy doesn't mention).
 
-**Phase 2 (background removal in the browser):** live since 2026-10-09; Cloudflare caches the model. What's left: phone testing, watching the browser/server split in Umami, then downsizing the VPS (see the Phase 2 checklist).
+**Phase 2 (background removal in the browser):** live since 2026-10-09 and working on a Mac (Chrome) and an iPhone (Safari); Cloudflare caches the model. **Pick up here:** around 2026-10-20, run the downsizing check in the Phase 2 checklist; if the server rarely cuts photos out itself, downsize the VPS.
 
 **Next up:**
 1. **Build a few models** (in progress) and photograph them: these feed both the launch posts and the landing page gallery (add them to `GALLERY` in `frontend/src/landing/Landing.tsx`; photos go in `frontend/public/landing/gallery/`).
@@ -128,8 +128,12 @@ This removes ~90% of server load and lets the VPS shrink to ~€4–5/mo.
 - [x] Parity in Chrome (Apple GPU): 15/16 test photos give the same template as the server (sizes within 1 mm). The odd one out is a row of overlapping shoes, which neither path cuts out usefully.
 - [x] The `upload` event in Umami now has `cutout` (`browser`/`server`) and `reason`. Privacy policy updated.
 - [x] Deployed 2026-10-09 (`694130a`); a live upload sent a browser-made mask. **Cloudflare Cache Rule** "Model and wasm": `starts_with(http.request.uri.path, "/models/") or ends_with(http.request.uri.path, ".wasm")`, eligible for cache, Edge TTL from the `Cache-Control` header (Caddy sends `immutable` for `/assets/*` and `/models/*`). Cloudflare doesn't cache those extensions without it; check for `cf-cache-status: HIT`.
-- [ ] Test on real phones (iPhone Safari 26, Android Chrome) and check the browser/server split in Umami
-- [ ] Downsize the VPS once most uploads are cut out in the browser
+- [x] Phone test: an iPhone (Safari) cut out a photo in the browser on 2026-10-09 (the server's model never loaded). Android Chrome not tested yet.
+- [ ] **Downsizing check (around 2026-10-20, after a week or two of real traffic).** Two read-only signals, from the Mac:
+  - **Did the server cut anything out itself?** rembg loads its model (~1.5 GB RAM) only the first time the server has to cut a photo out, then keeps it until the app restarts (every deploy). `ssh skeleton 'docker stats --no-stream $(cd /opt/skeleton3d && docker compose ps -q app)'`: ~150 MB means no server cut-outs since the last deploy, ~1.5 GB+ means at least one. Check `docker compose ps app` too, for how long it's been up.
+  - **The browser/server split** from Umami's `upload` event (`cutout` = `browser`/`server`, `reason` = why not the browser). Visitors with Do Not Track or blockers aren't counted, so treat it as a sample. Query on the server (read-only): `docker compose exec -T umami-db psql -U umami -d umami -c "select d.string_value, count(*) from website_event e join event_data d on d.website_event_id = e.event_id where e.event_name = 'upload' and d.data_key = 'cutout' and e.created_at > now() - interval '14 days' group by 1"`, or `data_key = 'reason'` to see why uploads went to the server.
+  - Downsize if nearly all uploads are `browser`. Server cut-outs then run one at a time (`SEGMENT_CONCURRENCY=1`) and may take longer on the smaller box; that's fine if they're rare. Hetzner console → server → Rescale → **CPU and RAM only** (keeps the disk, so it can be undone), ~2 vCPU / 4 GB. Rescaling powers the server off for a minute or two. Then check `/api/health` and the UptimeRobot email.
+- [ ] Android Chrome test (optional; Chrome on Android supports WebGPU on most recent phones)
 
 ## Phase 3: Accounts (once there's real usage)
 
