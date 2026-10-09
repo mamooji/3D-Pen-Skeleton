@@ -20,8 +20,7 @@ Live at **https://trace3dpen.com** (Cloudflare in front, a Cloudflare Origin CA 
 
 **Next up:**
 1. **Build a few models** (in progress) and photograph them: these feed both the launch posts and the landing page gallery (add them to `GALLERY` in `frontend/src/landing/Landing.tsx`; photos go in `frontend/public/landing/gallery/`).
-2. **Launch posts:** r/3Dpen, 3D-pen Facebook groups, and short TikToks/Shorts showing photo → template → build. Claude can draft the Reddit post and a video script.
-3. Later: restrict the Hetzner firewall's ports 80/443 to Cloudflare's IP ranges, so the server can't be reached around Cloudflare.
+2. **Launch posts:** r/3Dpen, 3D-pen Facebook groups, and short TikToks/Shorts showing photo → template → build. Claude can draft the Reddit post and a video script. On hold until there are photos.
 
 ## Key numbers (measured on an M1 Pro, 1600×1200 photo)
 
@@ -38,7 +37,7 @@ Live at **https://trace3dpen.com** (Cloudflare in front, a Cloudflare Origin CA 
 ## Hosting
 
 - **Hetzner Cloud, Regular Performance, 3 vCPU / 4 GB / 80 GB** (CA$37.49/mo; Cost-Optimized wasn't available), Ubuntu 24.04. 4 GB is why background removal runs one at a time (`SEGMENT_CONCURRENCY=1`) with a 4 GB swap file. Measured on the server: 2–3 s per upload, ~1.7 GB RAM in use.
-- Log in as `deploy` (SSH keys only, passwordless sudo). The IP is in the `VPS_HOST` GitHub secret and the Mac's SSH config (kept out of the repo so Cloudflare can hide it). Authorized keys: the Windows PC, the Mac (`ssh skeleton` via `~/.ssh/config.d/skeleton.conf`), and the GitHub Actions deploy key. To add a machine without SSH, use the Hetzner web console (Rescue → Reset root password, then Console) and append the key with `>>`. Hetzner Cloud Firewall and `ufw` both allow only 22/80/443.
+- Log in as `deploy` (SSH keys only, passwordless sudo). The IP is in the `VPS_HOST` GitHub secret and the Mac's SSH config (kept out of the repo so Cloudflare can hide it). Authorized keys: the Windows PC, the Mac (`ssh skeleton` via `~/.ssh/config.d/skeleton.conf`), and the GitHub Actions deploy key. To add a machine without SSH, use the Hetzner web console (Rescue → Reset root password, then Console) and append the key with `>>`. **Hetzner Cloud Firewall** (the real gate): TCP 22 and ICMP from anywhere, TCP 80 and 443 **only from Cloudflare's IP ranges** (https://www.cloudflare.com/ips/), so the site can't be reached around Cloudflare. Keep ICMP: path MTU discovery needs it. If Cloudflare adds ranges, update both the firewall rules and `trusted_proxies` in `caddy/Caddyfile`. `ufw` also allows only 22/80/443, but Docker's published ports bypass it, so it doesn't actually filter 80/443.
 - When resizing, choose **"CPU and RAM only"** so the disk doesn't grow and a downgrade stays possible.
 - **Cloudflare** (free plan) in front: DDoS protection, static caching, hides the origin IP.
 - After Phase 2 moves background removal to the browser, downsize to ~2 vCPU / 4 GB (~€4–5/mo).
