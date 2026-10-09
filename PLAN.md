@@ -18,7 +18,7 @@ Live at **https://trace3dpen.com** (Cloudflare in front, a Cloudflare Origin CA 
 
 **Origin certificate:** Caddy serves a Cloudflare Origin CA certificate for `trace3dpen.com` and `*.trace3dpen.com`, valid until **2041-10-05**. Only Cloudflare trusts it, so it works only with the proxy on and Full (strict). It's in `/opt/skeleton3d/certs/` (`origin.pem`, `origin.key`) on the server only, never in the repo. It replaced Let's Encrypt, whose renewals would have had to reach the server through Cloudflare, which gets risky once the firewall only allows Cloudflare. To replace it: Cloudflare → SSL/TLS → Origin Server → Create Certificate, copy both files over the old ones, then `docker compose restart caddy`. Keep in Cloudflare: Scrape Shield's **Email Address Obfuscation** off (it rewrites the contact email and breaks React hydration), and Web Analytics' automatic setup, Rocket Loader, and Bot Fight Mode off (they'd add scripts or cookies the privacy policy doesn't mention).
 
-**Phase 2 (background removal in the browser):** built and tested locally on 2026-10-09; see the Phase 2 checklist for what's left (deploy, Cloudflare Cache Rule, phone testing, then downsizing).
+**Phase 2 (background removal in the browser):** live since 2026-10-09; Cloudflare caches the model. What's left: phone testing, watching the browser/server split in Umami, then downsizing the VPS (see the Phase 2 checklist).
 
 **Next up:**
 1. **Build a few models** (in progress) and photograph them: these feed both the launch posts and the landing page gallery (add them to `GALLERY` in `frontend/src/landing/Landing.tsx`; photos go in `frontend/public/landing/gallery/`).
@@ -127,7 +127,7 @@ This removes ~90% of server load and lets the VPS shrink to ~€4–5/mo.
 - [x] Model: `isnet-general-use` (Apache-2.0) converted to **fp16 (90 MB)** with its 11 training-only outputs removed. Same masks as fp32 on 16 test photos. int8 (46 MB), silueta (44 MB), and u2netp (4.6 MB) were all clearly worse. Made by `backend/scripts/browser_model.py`, in its own Docker build stage, served at `/models/isnet-general-use-fp16-v1.onnx` (bump the version in the name and in `cutout.ts` if it changes). Browsers keep it in Cache Storage, saved only after it loads and runs.
 - [x] Parity in Chrome (Apple GPU): 15/16 test photos give the same template as the server (sizes within 1 mm). The odd one out is a row of overlapping shoes, which neither path cuts out usefully.
 - [x] The `upload` event in Umami now has `cutout` (`browser`/`server`) and `reason`. Privacy policy updated.
-- [ ] Deploy, then add the **Cloudflare Cache Rule** for `/models/*` and `*.wasm` (Cloudflare doesn't cache those extensions by default; Caddy already sends `immutable` cache headers for `/assets/*` and `/models/*`)
+- [x] Deployed 2026-10-09 (`694130a`); a live upload sent a browser-made mask. **Cloudflare Cache Rule** "Model and wasm": `starts_with(http.request.uri.path, "/models/") or ends_with(http.request.uri.path, ".wasm")`, eligible for cache, Edge TTL from the `Cache-Control` header (Caddy sends `immutable` for `/assets/*` and `/models/*`). Cloudflare doesn't cache those extensions without it; check for `cf-cache-status: HIT`.
 - [ ] Test on real phones (iPhone Safari 26, Android Chrome) and check the browser/server split in Umami
 - [ ] Downsize the VPS once most uploads are cut out in the browser
 
