@@ -20,6 +20,8 @@ Live at **https://trace3dpen.com** (Cloudflare in front, a Cloudflare Origin CA 
 
 **Phase 2 (background removal in the browser):** live since 2026-10-09 and working on a Mac (Chrome) and an iPhone (Safari); Cloudflare caches the model. **Pick up here:** around 2026-10-20, run the downsizing check in the Phase 2 checklist; if the server rarely cuts photos out itself, downsize the VPS.
 
+**Better 3D shapes:** started 2026-10-09 to fix boxy objects like cars, which come out as cigars. Next: prototype the "boxy" shape option on the user's car photo (see "Better 3D shapes").
+
 **Next up:**
 1. **Build a few models** (in progress) and photograph them: these feed both the launch posts and the landing page gallery (add them to `GALLERY` in `frontend/src/landing/Landing.tsx`; photos go in `frontend/public/landing/gallery/`).
 2. **Launch posts:** r/3Dpen, 3D-pen Facebook groups, and short TikToks/Shorts showing photo → template → build. Claude can draft the Reddit post and a video script. On hold until there are photos.
@@ -134,6 +136,28 @@ This removes ~90% of server load and lets the VPS shrink to ~€4–5/mo.
   - **The browser/server split** from Umami's `upload` event (`cutout` = `browser`/`server`, `reason` = why not the browser). Visitors with Do Not Track or blockers aren't counted, so treat it as a sample. Query on the server (read-only): `docker compose exec -T umami-db psql -U umami -d umami -c "select d.string_value, count(*) from website_event e join event_data d on d.website_event_id = e.event_id where e.event_name = 'upload' and d.data_key = 'cutout' and e.created_at > now() - interval '14 days' group by 1"`, or `data_key = 'reason'` to see why uploads went to the server.
   - Downsize if nearly all uploads are `browser`. Server cut-outs then run one at a time (`SEGMENT_CONCURRENCY=1`) and may take longer on the smaller box; that's fine if they're rare. Hetzner console → server → Rescale → **CPU and RAM only** (keeps the disk, so it can be undone), ~2 vCPU / 4 GB. Rescaling powers the server off for a minute or two. Then check `/api/health` and the UptimeRobot email.
 - [ ] Android Chrome test (optional; Chrome on Android supports WebGPU on most recent phones)
+
+## Better 3D shapes (started 2026-10-09)
+
+**The problem:** the outline (cut-out) is right, but the 3D shape is wrong for anything that isn't round. `inflate.py` makes one outline into a balloon: the half-thickness at each point is `sqrt(4u)` from solving `lap(u) = -1`, so it depends only on how far that point is from the outline, and the back mirrors the front. A car's side photo becomes a cigar: every rib is an ellipse about as wide as the car is tall there, narrowest at the roof and bumpers, while a real car's ribs are rounded rectangles of roughly constant width. Characters suffer similarly (an arm in front of the body merges with it into one fat blob).
+
+**Route chosen (2026-10-09): #1 now, #2 if #1 isn't enough.**
+
+### Step 1: "Boxy" shape controls (in progress)
+- [ ] **Prototype first**, without UI: run the user's car photo (get the original, not a screenshot) at several roundness settings and compare the 3D frame with today's, so the shape is judged before building controls.
+- [ ] **Width (cm):** the real object's width. The thickness stops growing at that width, instead of following the outline's height.
+- [ ] **Roundness slider (round ↔ boxy):** how quickly the thickness reaches full width from the outline. Idea: `h = min(W, k * sqrt(4u))`, with `k` from roundness. Fully round must match today's result exactly, and stays the default, so existing photos don't change. Ribs and rings are both cut from the same `h`, so they still meet properly.
+- [ ] Add both controls under **Advanced**, plus API params, tests (round = today's output; boxy ribs have flat sides), and the 3D preview and PDF.
+- Known limits: the cabin won't narrow above the doors, and the wheels are part of the full-width body. That's for step 2.
+
+### Step 2: Side + front photos (if step 1 isn't enough)
+- [ ] Optional second (and third) photo: **front** (and **top**). The 3D shape is where the outlines overlap (a visual hull, like modelling from blueprints). The ribs are front-view cross-sections, so a front photo gives each rib's real shape instead of a guess: correct width at every height, a narrower cabin, separate wheels. Line the photos up by the object's height. Runs on the CPU, nothing extra to pay for.
+
+### Held back (revisit if there's demand)
+- **Magic wand / brush editor** (Segment Anything in the browser): fixes wrong cut-outs and picks out a single part. The car's cut-out is already right, so this doesn't help the current problem.
+- **Depth from one photo** (e.g. Depth Anything V2 Small, Apache-2.0, in the browser): shapes the front surface and shows which parts are in front. The most promising next step for characters.
+- **Part painting:** the user paints parts and sets each part's depth or thickness. A lot of UI work.
+- **AI image-to-3D** (e.g. TripoSR, MIT): generates a full mesh, back included, which we'd then slice. The best quality, but it needs a GPU (~$0.01–0.05 per model on a hosted service), so it could be a Phase 4 supporter perk.
 
 ## Phase 3: Accounts (once there's real usage)
 
