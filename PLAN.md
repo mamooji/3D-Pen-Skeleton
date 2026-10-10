@@ -20,7 +20,7 @@ Live at **https://trace3dpen.com** (Cloudflare in front, a Cloudflare Origin CA 
 
 **Phase 2 (background removal in the browser):** live since 2026-10-09 and working on a Mac (Chrome) and an iPhone (Safari); Cloudflare caches the model. **Pick up here:** around 2026-10-20, run the downsizing check in the Phase 2 checklist; if the server rarely cuts photos out itself, downsize the VPS.
 
-**Better 3D shapes:** started 2026-10-09 to fix boxy objects like cars, which come out as cigars. Next: prototype the "boxy" shape option on the user's car photo (see "Better 3D shapes").
+**Better 3D shapes:** started 2026-10-09 to fix boxy objects like cars, which come out as cigars. Prototype done (k=3 to k=6 look right; side panels wanted). Next: build the Shape slider, Width, and Side panels (see "Better 3D shapes", step 1).
 
 **Next up:**
 1. **Build a few models** (in progress) and photograph them: these feed both the launch posts and the landing page gallery (add them to `GALLERY` in `frontend/src/landing/Landing.tsx`; photos go in `frontend/public/landing/gallery/`).
@@ -144,11 +144,12 @@ This removes ~90% of server load and lets the VPS shrink to ~€4–5/mo.
 **Route chosen (2026-10-09): #1 now, #2 if #1 isn't enough.**
 
 ### Step 1: "Boxy" shape controls (in progress)
-- [ ] **Prototype first**, without UI: run the user's car photo (get the original, not a screenshot) at several roundness settings and compare the 3D frame with today's, so the shape is judged before building controls.
-- [ ] **Width (cm):** the real object's width. The thickness stops growing at that width, instead of following the outline's height.
-- [ ] **Roundness slider (round ↔ boxy):** how quickly the thickness reaches full width from the outline. Idea: `h = min(W, k * sqrt(4u))`, with `k` from roundness. Fully round must match today's result exactly, and stays the default, so existing photos don't change. Ribs and rings are both cut from the same `h`, so they still meet properly.
-- [ ] Add both controls under **Advanced**, plus API params, tests (round = today's output; boxy ribs have flat sides), and the 3D preview and PDF.
-- Known limits: the cabin won't narrow above the doors, and the wheels are part of the full-width body. That's for step 2.
+- [x] **Prototype** (2026-10-09, a side photo of a Porsche 911): boxy thickness `h = W * tanh(k * h0 / W)`, where `h0` is today's balloon half-thickness and `W` the real half-width, gives car-like rounded-rectangle ribs and a rounded-rectangle top view. **k=3 to k=6 look right** (k=1.5 still looks like a balloon; k=6 is nearly a brick). Still 6 ribs, 2 rings, 1 page, no warnings.
+- [ ] **Shape slider (Round ↔ Boxy)** under Advanced. **Round = today's output exactly, and it's the default.** Moving it off Round turns on the boxy formula with k from 3 (just off Round) to 6 (fully Boxy).
+- [ ] **Width (cm)**, shown only when Shape isn't Round. Defaults to about 40% of the object's length (a car is ~41%), so it works without measuring. It replaces the Thickness slider while Shape is boxy (hide Thickness then), so the two never conflict.
+- [ ] **Side panels** (user request, prototyped 2026-10-09): extra copies of the outline on each side, cut from the body parallel to the photo at about 85% of the half-width. At k=6 a panel matches the outline almost exactly (95% of its area, wheel arches included); at k=3 it's a smoothed, smaller outline (78%). An Advanced switch, off by default, shown only when Shape isn't Round; one panel per side. Needs: the panels as numbered, traced pieces on the pages; ticks on each panel where ribs and rings cross it, and matching ticks on the ribs and rings; panels in the 3D preview.
+- [ ] API params and tests: Round reproduces today's templates exactly; boxy ribs have flat sides at the chosen width; panels sit at the right depth and their ticks line up with the ribs. Then check the 3D preview and the PDF in the real app.
+- Known limits: the cabin is as wide as the body, and the nose doesn't narrow in the top view. That's for step 2.
 
 ### Step 2: Side + front photos (if step 1 isn't enough)
 - [ ] Optional second (and third) photo: **front** (and **top**). The 3D shape is where the outlines overlap (a visual hull, like modelling from blueprints). The ribs are front-view cross-sections, so a front photo gives each rib's real shape instead of a guess: correct width at every height, a narrower cabin, separate wheels. Line the photos up by the object's height. Runs on the CPU, nothing extra to pay for.
