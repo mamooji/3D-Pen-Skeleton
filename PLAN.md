@@ -20,7 +20,7 @@ Live at **https://trace3dpen.com** (Cloudflare in front, a Cloudflare Origin CA 
 
 **Phase 2 (background removal in the browser):** live since 2026-10-09 and working on a Mac (Chrome) and an iPhone (Safari); Cloudflare caches the model. **Pick up here:** around 2026-10-20, run the downsizing check in the Phase 2 checklist; if the server rarely cuts photos out itself, downsize the VPS.
 
-**Better 3D shapes:** started 2026-10-09 to fix boxy objects like cars, which come out as cigars. Prototype done (k=3 to k=6 look right; side panels wanted). Next: build the Shape slider, Width, and Side panels (see "Better 3D shapes", step 1).
+**Better 3D shapes:** started 2026-10-09 to fix boxy objects like cars, which come out as cigars. Step 1 (Shape, Width, Side panels) is built and tested locally. Next: deploy it, try more boxy objects, then decide on step 2 (front photo).
 
 **Next up:**
 1. **Build a few models** (in progress) and photograph them: these feed both the launch posts and the landing page gallery (add them to `GALLERY` in `frontend/src/landing/Landing.tsx`; photos go in `frontend/public/landing/gallery/`).
@@ -143,12 +143,13 @@ This removes ~90% of server load and lets the VPS shrink to ~€4–5/mo.
 
 **Route chosen (2026-10-09): #1 now, #2 if #1 isn't enough.**
 
-### Step 1: "Boxy" shape controls (in progress)
+### Step 1: "Boxy" shape controls (built 2026-10-09, not deployed yet)
 - [x] **Prototype** (2026-10-09, a side photo of a Porsche 911): boxy thickness `h = W * tanh(k * h0 / W)`, where `h0` is today's balloon half-thickness and `W` the real half-width, gives car-like rounded-rectangle ribs and a rounded-rectangle top view. **k=3 to k=6 look right** (k=1.5 still looks like a balloon; k=6 is nearly a brick). Still 6 ribs, 2 rings, 1 page, no warnings.
-- [ ] **Shape slider (Round ↔ Boxy)** under Advanced. **Round = today's output exactly, and it's the default.** Moving it off Round turns on the boxy formula with k from 3 (just off Round) to 6 (fully Boxy).
-- [ ] **Width (cm)**, shown only when Shape isn't Round. Defaults to about 40% of the object's length (a car is ~41%), so it works without measuring. It replaces the Thickness slider while Shape is boxy (hide Thickness then), so the two never conflict.
-- [ ] **Side panels** (user request, prototyped 2026-10-09): extra copies of the outline on each side, cut from the body parallel to the photo at about 85% of the half-width. At k=6 a panel matches the outline almost exactly (95% of its area, wheel arches included); at k=3 it's a smoothed, smaller outline (78%). An Advanced switch, off by default, shown only when Shape isn't Round; one panel per side. Needs: the panels as numbered, traced pieces on the pages; ticks on each panel where ribs and rings cross it, and matching ticks on the ribs and rings; panels in the 3D preview.
-- [ ] API params and tests: Round reproduces today's templates exactly; boxy ribs have flat sides at the chosen width; panels sit at the right depth and their ticks line up with the ribs. Then check the 3D preview and the PDF in the real app.
+- [x] **Shape slider** (Round · Slightly boxy · Boxy · Very boxy · Brick = k 3, 4, 5, 6) in the **main settings**, not under Advanced as first planned, because it swaps Thickness for Width there. **Round = today's output exactly, and it's the default.** Applied at template-build time to the cached body (`inflate.boxy`), so the upload cache didn't change.
+- [x] **Width (cm)** takes Thickness's place while Shape isn't Round. It defaults to 40% of the object's length (shown as "6 cm (auto)" at 15 cm), and the thickness is ignored for boxy shapes.
+- [x] **Side panels** (user request, prototyped 2026-10-09): extra copies of the outline on each side, cut from the body parallel to the photo at about 85% of the half-width. At k=6 a panel matches the outline almost exactly (95% of its area, wheel arches included); at k=3 it's a smoothed, smaller outline (78%). An Advanced switch, off by default, shown only when Shape isn't Round; one panel per side. Printed once, labelled "Side panel: make 2", with each rib's and ring's attachment line on it and matching lines on the ribs and rings; in the 3D preview.
+- [x] API params (`shape`, `width_cm`, `panels`) and tests: Round reproduces today's templates exactly; boxy ribs have flat sides at the chosen width; the width defaults from the length and replaces the thickness; panels sit at ±85% and print. Checked in the real app with the 911 photo: print pages, 3D preview, PDF.
+- [ ] Deploy, then try a few more boxy things (a truck, a box, a chair).
 - Known limits: the cabin is as wide as the body, and the nose doesn't narrow in the top view. That's for step 2.
 
 ### Step 2: Side + front photos (if step 1 isn't enough)

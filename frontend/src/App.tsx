@@ -179,6 +179,7 @@ export default function App() {
               <Controls
                 params={params}
                 resolved={result?.info.params}
+                widthCm={result?.info.width_cm}
                 onChange={setParams}
               />
               <Button

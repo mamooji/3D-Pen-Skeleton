@@ -10,7 +10,7 @@ from PIL import Image
 
 from . import curves, slicer
 from .features import feature_lines
-from .inflate import half_thickness, signed_fields
+from .inflate import boxy, half_thickness, signed_fields
 from .layout import Piece, pack
 from .render import Page, Path
 from .segment import clean_mask, crop_to_work, extract_mask, load_image, load_mask
@@ -20,6 +20,7 @@ RING_PALETTE = ["#e6007e", "#0097a7", "#f39c12", "#6d4c41"]
 OUTLINE = "#1f1a17"
 GUIDE = "#9a9a9a"
 FEATURE = "#7a7a7a"
+PANEL = "#b07d00"
 TICK = 1.6  # half length of joint tick marks, mm
 
 # Detail 1..5 -> how many cuts and how much curve cleanup (sizes in work px).
@@ -30,6 +31,13 @@ DETAIL = {
     4: dict(ribs=8, rings=2, sigma=1.8, tol=0.4, min_frac=0.0025, feat_len=30),
     5: dict(ribs=11, rings=3, sigma=1.2, tol=0.25, min_frac=0.001, feat_len=20),
 }
+
+# Shape 1..4 -> how steeply the sides rise to full width (see inflate.boxy). 0 is round (the plain balloon).
+BOXY_K = {1: 3.0, 2: 4.0, 3: 5.0, 4: 6.0}
+# Width when none is given, as a fraction of the object's length (left to right in the photo); a car is ~0.41.
+DEFAULT_WIDTH = 0.4
+# Side panels are cut this far out, as a fraction of the body's half-width: just inside the rounded edges.
+PANEL_DEPTH = 0.85
 
 
 @dataclass
@@ -83,7 +91,10 @@ def resolve_params(p: dict) -> dict:
         paper=p.get("paper", "a4"),
         stack=bool(p.get("stack", True)),
         features=bool(p.get("features", False)),
+        shape=int(np.clip(p.get("shape", 0), 0, 4)),
+        width_cm=float(p["width_cm"]) if p.get("width_cm") else None,
     )
+    out["panels"] = bool(p.get("panels", False)) and out["shape"] > 0  # panels only make sense on a boxy body
     for k in ("ribs", "rings"):
         if p.get(k) is not None:
             out[k] = int(p[k])
@@ -103,6 +114,14 @@ def build_template(prep: Prepared, params: dict) -> Template:
     T, sigma, tol = P["thickness"], P["sigma"], P["tol"]
     x0, y0, x1, y1 = prep.bbox
     min_area = P["min_frac"] * float(prep.mask.sum())
+    scale = P["size_cm"] * 10.0 / max(x1 - x0, y1 - y0)  # mm per work px
+
+    # Boxy shapes square the body up to a real width, which then sets the depth instead of the thickness.
+    signed, width_cm = prep.signed, None
+    if P["shape"]:
+        width_cm = P["width_cm"] or round(DEFAULT_WIDTH * (x1 - x0) * scale / 10, 1)
+        signed = boxy(prep.signed, width_cm * 10 / 2 / scale, BOXY_K[P["shape"]])
+        T = 1.0
 
     def tidy(loops, closed=True):
         return [curves.clean(l, sigma, tol, closed) for l in loops]
@@ -110,14 +129,17 @@ def build_template(prep: Prepared, params: dict) -> Template:
     profile = tidy(slicer.drop_small(slicer.profile_loops(prep.sdf), min_area))
     rib_x = slicer.slice_positions(x0, x1, P["ribs"])
     ring_y = slicer.slice_positions(y0, y1, P["rings"])
-    ribs = [tidy(slicer.drop_small(slicer.rib_loops(prep.signed, x, T), min_area * T)) for x in rib_x]
-    rings = [tidy(slicer.drop_small(slicer.ring_loops(prep.signed, y, T), min_area * T)) for y in ring_y]
+    ribs = [tidy(slicer.drop_small(slicer.rib_loops(signed, x, T), min_area * T)) for x in rib_x]
+    rings = [tidy(slicer.drop_small(slicer.ring_loops(signed, y, T), min_area * T)) for y in ring_y]
+    # Side panels: the body cut parallel to the photo at depth +-panel_d, one on each side.
+    panel_d, panels = 0.0, []
+    if P["panels"]:
+        panel_d = PANEL_DEPTH * float(signed.max())
+        panels = tidy(slicer.drop_small(slicer.profile_loops(signed - panel_d), min_area))
     features = []
     if P["features"]:
         features = [curves.clean(l, sigma, tol, False)
                     for l in feature_lines(prep.rgb, prep.mask, P["feat_len"])]
-
-    scale = P["size_cm"] * 10.0 / max(x1 - x0, y1 - y0)  # mm per work px
 
     def X(x):
         return (np.asarray(x) - x0) * scale
@@ -160,11 +182,15 @@ def build_template(prep: Prepared, params: dict) -> Template:
         for loop in ribs[i]:
             piece.add(Path(np.column_stack([loop[:, 0] * scale, Y(loop[:, 1])]), True, rib_color[i], 0.35))
         for j in rings_kept:  # where ring j crosses this rib
-            w = slicer.depth_at(prep.signed, rib_x[i], ring_y[j], T) * scale
+            w = slicer.depth_at(signed, rib_x[i], ring_y[j], T) * scale
             if w > 0:
                 for sx in (-w, w):
                     piece.add(Path(np.array([[sx - TICK, Y(ring_y[j])], [sx + TICK, Y(ring_y[j])]]),
                                    False, ring_color[j], 0.35))
+        if panels:  # where the side panels attach
+            for a, b in slicer.column_intervals(signed - panel_d, rib_x[i]):
+                for sw in (-panel_d * scale, panel_d * scale):
+                    piece.add(Path(np.array([[sw, Y(a)], [sw, Y(b)]]), False, PANEL, 0.3))
 
     def center_line(piece: Piece, vertical: bool):
         x_lo, y_lo, x_hi, y_hi = piece.bbox()
@@ -195,11 +221,15 @@ def build_template(prep: Prepared, params: dict) -> Template:
         for loop in rings[j]:
             piece.add(Path(np.column_stack([X(loop[:, 0]), loop[:, 1] * scale]), True, ring_color[j], 0.35))
         for i in ribs_kept:  # where rib i crosses this ring
-            w = slicer.depth_at(prep.signed, rib_x[i], ring_y[j], T) * scale
+            w = slicer.depth_at(signed, rib_x[i], ring_y[j], T) * scale
             if w > 0:
                 for sw in (-w, w):
                     piece.add(Path(np.array([[X(rib_x[i]), sw - TICK], [X(rib_x[i]), sw + TICK]]),
                                    False, rib_color[i], 0.35))
+        if panels:  # where the side panels attach
+            for a, b in slicer.row_intervals(signed - panel_d, ring_y[j]):
+                for sw in (-panel_d * scale, panel_d * scale):
+                    piece.add(Path(np.array([[X(a), sw], [X(b), sw]]), False, PANEL, 0.3))
 
     if rings_kept:
         groups = [rings_kept] if P["stack"] else [[j] for j in rings_kept]
@@ -212,6 +242,21 @@ def build_template(prep: Prepared, params: dict) -> Template:
                 left = min(l[:, 0].min() for l in rings[j])
                 gp.label(X(left) - 1.5, label * 0.35, ring_name[j], label, ring_color[j], "end")
             pieces.append(gp)
+
+    # --- Side panels: the outline again, just inside each side ------------------
+    if panels:
+        sp = Piece("Side panel")
+        for loop in panels:
+            sp.add(Path(np.column_stack([X(loop[:, 0]), Y(loop[:, 1])]), True, PANEL, 0.4))
+        for i in ribs_kept:
+            for a, b in slicer.column_intervals(signed - panel_d, rib_x[i]):
+                sp.add(Path(np.array([[X(rib_x[i]), Y(a)], [X(rib_x[i]), Y(b)]]), False, rib_color[i], 0.3))
+        for j in rings_kept:
+            for a, b in slicer.row_intervals(signed - panel_d, ring_y[j]):
+                sp.add(Path(np.array([[X(a), Y(ring_y[j])], [X(b), Y(ring_y[j])]]), False, ring_color[j], 0.3))
+        x_lo, y_lo, x_hi, y_hi = sp.bbox()
+        sp.label((x_lo + x_hi) / 2, y_hi + label + 1.0, "Side panel: make 2", label, PANEL)
+        pieces.append(sp)
 
     # --- Scale check -----------------------------------------------------------
     sc = Piece("Scale")
@@ -252,12 +297,17 @@ def build_template(prep: Prepared, params: dict) -> Template:
     for j in rings_kept:
         for loop in rings[j]:
             put(ring_color[j], np.column_stack([X(loop[:, 0]), np.full(len(loop), Y(ring_y[j])), loop[:, 1] * scale]))
+    for loop in panels:
+        for sw in (-panel_d * scale, panel_d * scale):
+            put(PANEL, np.column_stack([X(loop[:, 0]), Y(loop[:, 1]), np.full(len(loop), sw)]))
 
     info = {
         "ribs": len(ribs_kept),
         "rings": len(rings_kept),
         "pages": len(pages),
         "size_mm": [round((x1 - x0) * scale, 1), round((y1 - y0) * scale, 1)],
-        "params": {k: P[k] for k in ("detail", "ribs", "rings", "thickness", "size_cm", "paper", "stack", "features")},
+        "params": {k: P[k] for k in ("detail", "ribs", "rings", "thickness", "size_cm", "paper", "stack", "features",
+                                     "shape", "width_cm", "panels")},
+        "width_cm": width_cm,  # the width used (the default when none was given); None when round
     }
     return Template(pages, warnings, info, model)

@@ -9,6 +9,12 @@ export interface Params {
   paper: Paper;
   stack: boolean;
   features: boolean;
+  /** 0 round (the balloon guess), 1..4 increasingly boxy (flat sides, for cars and boxes). */
+  shape: number;
+  /** Real width side to side, for boxy shapes; null picks one from the length. */
+  width_cm: number | null;
+  /** Side panels, for boxy shapes. */
+  panels: boolean;
 }
 
 export const DEFAULT_PARAMS: Params = {
@@ -20,6 +26,9 @@ export const DEFAULT_PARAMS: Params = {
   paper: "a4",
   stack: true,
   features: false,
+  shape: 0,
+  width_cm: null,
+  panels: false,
 };
 
 export interface Polyline3D {
@@ -36,6 +45,8 @@ export interface TemplateResult {
     pages: number;
     size_mm: [number, number];
     params: Params;
+    /** The width used for a boxy shape (the default when none was set); null when round. */
+    width_cm: number | null;
   };
   model: Polyline3D[];
 }

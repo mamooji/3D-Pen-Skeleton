@@ -8,6 +8,9 @@ stay fat, because the solution adapts to the local width.
 
 The object is assumed mirror-symmetric front-to-back, so h is the half
 thickness: the body occupies |depth| <= h(x, y).
+
+That suits rounded things (animals, fruit, characters). Boxy things like cars
+come out as cigars, so boxy() can square the body up to a chosen width.
 """
 from __future__ import annotations
 
@@ -56,6 +59,18 @@ def half_thickness(mask: np.ndarray, solve_size: int = SOLVE_SIZE) -> np.ndarray
     hfull = s * np.sqrt(4.0 * np.maximum(U, 0.0))
     hfull[~mask] = 0.0
     return hfull.astype(np.float32)
+
+
+def boxy(signed: np.ndarray, half_width: float, k: float) -> np.ndarray:
+    """Square up the balloon: rise k times faster from the outline, then level off smoothly at half_width.
+
+    Takes and returns a signed_height field (see signed_fields); only the inside changes. Boxy objects like
+    cars get flat sides and rounded edges instead of round cross sections, at their real width.
+    """
+    out = signed.copy()
+    inside = signed > 0
+    out[inside] = half_width * np.tanh(k * signed[inside] / half_width)
+    return out
 
 
 def signed_fields(mask: np.ndarray, height: np.ndarray):

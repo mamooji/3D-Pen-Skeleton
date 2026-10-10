@@ -28,6 +28,8 @@ import {
 interface Props {
   params: Params;
   resolved?: Params;
+  /** The width the last template used, shown while the width is automatic. */
+  widthCm?: number | null;
   onChange: (p: Params) => void;
 }
 
@@ -40,9 +42,17 @@ const DETAIL_LABELS = [
   "Very detailed",
 ];
 
-export default function Controls({ params, resolved, onChange }: Props) {
+const SHAPE_LABELS = ["Round", "Slightly boxy", "Boxy", "Very boxy", "Brick"];
+
+export default function Controls({
+  params,
+  resolved,
+  widthCm,
+  onChange,
+}: Props) {
   const [advanced, setAdvanced] = useState(false);
   const set = (patch: Partial<Params>) => onChange({ ...params, ...patch });
+  const boxy = params.shape > 0;
 
   return (
     <Card>
@@ -73,16 +83,45 @@ export default function Controls({ params, resolved, onChange }: Props) {
           onChange={(v) => set({ size_cm: v })}
         />
         <SliderField
-          id="thickness"
-          label="Thickness"
-          help="How deep the object is front to back, compared with a rounded guess from the photo."
-          value={params.thickness}
-          min={0.3}
-          max={2}
-          step={0.05}
-          display={`${Math.round(params.thickness * 100)}%`}
-          onChange={(v) => set({ thickness: v })}
+          id="shape"
+          label="Shape"
+          help="Round suits animals, fruit and characters. Boxy gives flat sides and a real width, for cars, boxes and furniture."
+          value={params.shape}
+          min={0}
+          max={4}
+          step={1}
+          display={SHAPE_LABELS[params.shape]}
+          onChange={(v) => set({ shape: v })}
         />
+        {boxy ? (
+          <SliderField
+            id="width"
+            label="Width"
+            help="How wide the object is side to side, at the printed size. It starts at a guess from the length; a car is about 40% as wide as it is long."
+            value={params.width_cm ?? widthCm ?? params.size_cm * 0.4}
+            min={1}
+            max={40}
+            step={0.5}
+            display={
+              params.width_cm === null
+                ? `${widthCm ?? "…"} cm (auto)`
+                : `${params.width_cm} cm`
+            }
+            onChange={(v) => set({ width_cm: v })}
+          />
+        ) : (
+          <SliderField
+            id="thickness"
+            label="Thickness"
+            help="How deep the object is front to back, compared with a rounded guess from the photo."
+            value={params.thickness}
+            min={0.3}
+            max={2}
+            step={0.05}
+            display={`${Math.round(params.thickness * 100)}%`}
+            onChange={(v) => set({ thickness: v })}
+          />
+        )}
 
         <div className="flex items-center justify-between gap-4">
           <Label htmlFor="paper">Paper</Label>
@@ -165,6 +204,15 @@ export default function Controls({ params, resolved, onChange }: Props) {
               checked={params.features}
               onChange={(v) => set({ features: v })}
             />
+            {boxy && (
+              <SwitchField
+                id="panels"
+                label="Side panels"
+                description="Add the outline again on each side, for flat-sided objects like cars. Print one and make two."
+                checked={params.panels}
+                onChange={(v) => set({ panels: v })}
+              />
+            )}
           </CollapsibleContent>
         </Collapsible>
       </CardContent>

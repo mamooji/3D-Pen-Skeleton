@@ -56,6 +56,9 @@ class Params(BaseModel):
     paper: Literal["a4", "letter"] = "a4"
     stack: bool = True
     features: bool = False
+    shape: int = Field(0, ge=0, le=4)  # 0 round (the default), 1..4 increasingly boxy
+    width_cm: float | None = Field(None, ge=1.0, le=100.0)  # boxy shapes only; None picks one from the length
+    panels: bool = False  # side panels, boxy shapes only
 
 
 class TemplateRequest(BaseModel):

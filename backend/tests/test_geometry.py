@@ -7,8 +7,8 @@ import pytest
 from PIL import Image
 
 from app import slicer
-from app.inflate import half_thickness
-from app.pipeline import build_template, prepare, prepare_mask
+from app.inflate import boxy, half_thickness
+from app.pipeline import PANEL, PANEL_DEPTH, build_template, prepare, prepare_mask
 from app.render import page_svg, pages_pdf
 
 
@@ -96,6 +96,61 @@ def test_more_detail_means_more_ribs():
     prep = prepare_mask(snowman())
     counts = [build_template(prep, {"detail": d}).info["ribs"] for d in (1, 3, 5)]
     assert counts == sorted(counts) and counts[0] < counts[-1]
+
+
+def test_round_shape_is_unchanged():
+    prep = prepare_mask(snowman())
+    today = build_template(prep, {})
+    # Round ignores width and panels, which only apply to boxy shapes.
+    t = build_template(prep, {"shape": 0, "width_cm": 20, "panels": True})
+    assert t.model == today.model
+    assert [page_svg(p) for p in t.pages] == [page_svg(p) for p in today.pages]
+    assert t.info["width_cm"] is None
+
+
+def test_boxy_ribs_have_flat_sides_at_the_width():
+    prep = prepare_mask(bar())  # 400 x 100 px, like a car from the side
+    half = 50.0
+    flat_share = {}
+    for name, field in (("round", prep.signed), ("boxy", boxy(prep.signed, half, 6.0))):
+        (loop,) = slicer.rib_loops(field, 220.0, 1.0)
+        w, y = np.abs(loop[:, 0]), loop[:, 1]
+        near_max = y[w > 0.95 * w.max()]
+        flat_share[name] = (near_max.max() - near_max.min()) / (y.max() - y.min())
+        if name == "boxy":
+            assert w.max() == pytest.approx(half, rel=0.03)
+    assert flat_share["boxy"] > 0.6  # flat sides for most of the height
+    assert flat_share["round"] < 0.4  # today's rounded cross section
+
+
+def test_boxy_width_sets_depth_and_defaults_from_length():
+    prep = prepare_mask(bar())
+    t = build_template(prep, {"shape": 4, "size_cm": 40})  # 400 px long -> 1 mm per px
+    assert t.info["width_cm"] == pytest.approx(16.0)  # 40% of the 40 cm length
+    depth = max(abs(p[2]) for line in t.model for p in line["pts"])
+    assert depth == pytest.approx(80.0, rel=0.03)
+    # The width replaces the thickness slider.
+    thin = build_template(prep, {"shape": 4, "size_cm": 40, "thickness": 0.3})
+    assert thin.model == t.model
+    wide = build_template(prep, {"shape": 4, "size_cm": 40, "width_cm": 30})
+    assert max(abs(p[2]) for line in wide.model for p in line["pts"]) == pytest.approx(150.0, rel=0.03)
+
+
+def test_side_panels():
+    prep = prepare_mask(bar())
+    t = build_template(prep, {"shape": 4, "size_cm": 40, "width_cm": 20, "panels": True})
+    panels = [line for line in t.model if line["color"] == PANEL]
+    assert len(panels) == 2  # one each side
+    depths = sorted(line["pts"][0][2] for line in panels)
+    assert depths[0] == pytest.approx(-depths[1])
+    assert depths[1] == pytest.approx(PANEL_DEPTH * 100.0, rel=0.03)
+    for line in panels:
+        pts = np.asarray(line["pts"])
+        assert np.ptp(pts[:, 2]) == 0  # flat, parallel to the photo
+        assert np.ptp(pts[:, 0]) == pytest.approx(400.0, rel=0.06)  # about as long as the outline
+    svg = "".join(page_svg(p) for p in t.pages)
+    assert "Side panel: make 2" in svg and PANEL in svg
+    assert all("won't fit" in w for w in t.warnings)  # 40 cm is bigger than A4, nothing else
 
 
 def test_oversize_warns():
